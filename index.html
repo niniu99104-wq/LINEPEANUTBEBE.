@@ -197,7 +197,7 @@
     <div class="field" id="f-delivery">
       <label>取貨方式<span class="req">*</span></label>
       <div class="radios" id="deliveryBox">
-        <label data-v="7-11交貨便"><input type="radio" name="delivery" value="7-11交貨便">交貨便</label>
+        <label data-v="7-11交貨便"><input type="radio" name="delivery" value="7-11交貨便">7-11交貨便</label>
         <label data-v="宅配"><input type="radio" name="delivery" value="宅配">宅配</label>
       </div>
       <div class="err-msg">請選擇取貨方式</div>
@@ -381,7 +381,7 @@ function bindRadios(boxId, cb){
 bindRadios('deliveryBox', function(v){
   var s = document.getElementById('f-store');
   var a = document.getElementById('f-addr');
-  if (v === '交貨便'){
+  if (v === '7-11交貨便'){
     s.classList.remove('hide'); a.classList.add('hide');
     document.getElementById('addr').value = '';
   } else {
@@ -467,7 +467,7 @@ function validate(){
   var dv = document.querySelector('input[name=delivery]:checked');
   ok &= bad('f-delivery', !dv);
   if (dv){
-    if (dv.value === '交貨便') ok &= bad('f-store', !document.getElementById('store').value.trim());
+    if (dv.value === '7-11交貨便') ok &= bad('f-store', !document.getElementById('store').value.trim());
     else ok &= bad('f-addr', !document.getElementById('addr').value.trim());
   }
 
@@ -504,7 +504,7 @@ document.getElementById('submitBtn').addEventListener('click', function(){
     name: document.getElementById('name').value.trim(),
     phone: document.getElementById('phone').value.trim(),
     delivery: dv,
-    address: dv === '交貨便'
+    address: dv === '7-11交貨便'
       ? document.getElementById('store').value.trim()
       : document.getElementById('addr').value.trim(),
     payMethod: pv,
