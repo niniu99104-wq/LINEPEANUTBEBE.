@@ -15,6 +15,7 @@
     --accent-soft:#fdf1ec;
     --ok:#4a8c6f;
     --err:#c0392b;
+    --linepay:#06C755;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   body{
@@ -41,7 +42,7 @@
   .field:last-child{margin-bottom:0;}
   label{display:block;font-size:14px;font-weight:600;margin-bottom:7px;}
   .req{color:var(--accent);margin-left:3px;}
-  .hint{font-size:12px;color:var(--muted);font-weight:400;margin-top:5px;}
+  .hint{font-size:12px;color:var(--muted);font-weight:400;margin-top:5px;line-height:1.7;}
 
   input[type=text],input[type=tel],select,textarea{
     width:100%;padding:11px 12px;
@@ -58,13 +59,26 @@
     flex:1;margin:0;
     border:1px solid var(--line);border-radius:9px;
     padding:11px 6px;text-align:center;cursor:pointer;
-    font-weight:500;transition:all .15s;
+    font-weight:500;font-size:14px;transition:all .15s;
   }
   .radios input{position:absolute;opacity:0;pointer-events:none;}
   .radios label.on{
     border-color:var(--accent);background:var(--accent-soft);
     color:var(--accent);font-weight:600;
   }
+
+  .linepay-btn{
+    display:inline-block;
+    margin-top:8px;
+    padding:9px 18px;
+    background:var(--linepay);
+    color:#fff;
+    border-radius:7px;
+    font-size:13px;
+    font-weight:600;
+    text-decoration:none;
+  }
+  .linepay-btn:active{opacity:.85;}
 
   .hide{display:none;}
 
@@ -211,14 +225,15 @@
 <div class="toast" id="toast"></div>
 
 <script>
-/* ======== 設定：換成你的 GAS 部署網址（結尾 /exec） ======== */
+/* ============ 設定區：換成你的 GAS 部署網址（結尾 /exec） ============ */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbx9EKgQkxelVIvZ1cACUx3xmZIG18uGrb4T_mymWkms15M5NMJGy9XW6WX5tWEsC0N6/exec';
-/* ========================================================== */
+var LINEPAY_URL = 'https://line.me/ti/p/taMX75HZDW';
+/* ================================================================== */
 
 var DATA = { groups: [], members: {} };
 var curGroup = null;
 
-/* ---------- JSONP 讀取 ---------- */
+/* ---------- JSONP ---------- */
 function jsonp(params, onOk, onErr){
   var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
   var script = document.createElement('script');
@@ -296,7 +311,7 @@ document.getElementById('group').addEventListener('change', function(){
     var lab = document.createElement('label');
     lab.setAttribute('data-v', p);
     lab.innerHTML = '<input type="radio" name="pay" value="' + p + '">' +
-                    (p === 'LINEPAY' ? 'LINE Pay' : '匯款/轉帳');
+                    (p === 'LINEPAY' ? 'LINE Pay' : '銀行轉帳／ATM');
     box.appendChild(lab);
   });
   document.getElementById('f-pay').classList.remove('hide');
@@ -332,8 +347,13 @@ function bindRadios(boxId, cb){
 bindRadios('deliveryBox', function(v){
   var s = document.getElementById('f-store');
   var a = document.getElementById('f-addr');
-  if (v === '交貨便'){ s.classList.remove('hide'); a.classList.add('hide'); document.getElementById('addr').value=''; }
-  else { a.classList.remove('hide'); s.classList.add('hide'); document.getElementById('store').value=''; }
+  if (v === '交貨便'){
+    s.classList.remove('hide'); a.classList.add('hide');
+    document.getElementById('addr').value = '';
+  } else {
+    a.classList.remove('hide'); s.classList.add('hide');
+    document.getElementById('store').value = '';
+  }
 });
 
 function onPayChange(v){
@@ -343,16 +363,20 @@ function onPayChange(v){
   var hint = document.getElementById('payInfoHint');
   f.classList.remove('hide');
   inp.value = '';
+
   if (v === 'LINEPAY'){
     lab.innerHTML = 'LINE Pay 轉帳名字<span class="req">*</span>';
     inp.placeholder = '好友轉帳顯示的名字';
-    inp.setAttribute('inputmode','text');
-    hint.textContent = '請填您 LINE Pay 轉帳時顯示的名稱';
+    inp.setAttribute('inputmode', 'text');
+    hint.innerHTML =
+      '請先加豆媽好友，用 LINE Pay 好友轉帳完成付款，再回來填寫轉帳時顯示的名稱<br>' +
+      '<a href="' + LINEPAY_URL + '" target="_blank" rel="noopener" class="linepay-btn">' +
+      '👉 點我加豆媽好友</a>';
     document.getElementById('payInfoErr').textContent = '請填寫 LINE Pay 名字';
   } else {
     lab.innerHTML = '帳號後五碼<span class="req">*</span>';
     inp.placeholder = '5 位數字';
-    inp.setAttribute('inputmode','numeric');
+    inp.setAttribute('inputmode', 'numeric');
     hint.textContent = '您轉出帳號的最後五碼';
     document.getElementById('payInfoErr').textContent = '請填寫 5 位數字';
   }
@@ -394,11 +418,11 @@ function validate(){
   return !!ok;
 }
 
-/* ---------- 送出（JSONP，可拿到回傳文字） ---------- */
+/* ---------- 送出 ---------- */
 document.getElementById('submitBtn').addEventListener('click', function(){
   if (!validate()){
     var first = document.querySelector('.field.bad');
-    if (first) first.scrollIntoView({behavior:'smooth', block:'center'});
+    if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
   var btn = this;
@@ -430,7 +454,7 @@ document.getElementById('submitBtn').addEventListener('click', function(){
       document.getElementById('formCard').classList.add('hide');
       document.getElementById('resultText').textContent = res.text;
       document.getElementById('doneCard').classList.remove('hide');
-      window.scrollTo(0,0);
+      window.scrollTo(0, 0);
     } else {
       toast('送出失敗：' + res.msg);
       btn.disabled = false; btn.textContent = '送出回報';
