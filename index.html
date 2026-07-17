@@ -80,6 +80,32 @@
   }
   .linepay-btn:active{opacity:.85;}
 
+  .bank-box{
+    background:var(--accent-soft);
+    border:1px solid #f0d9cf;
+    border-radius:10px;
+    padding:14px 16px;
+    margin:-6px 0 18px;
+  }
+  .bank-title{
+    font-size:13px;font-weight:700;
+    color:var(--accent);margin-bottom:10px;
+  }
+  .bank-row{
+    display:flex;justify-content:space-between;
+    gap:12px;font-size:14px;padding:3px 0;
+  }
+  .bank-row .k{color:var(--muted);flex-shrink:0;}
+  .bank-row .v{font-weight:600;text-align:right;word-break:break-all;}
+  .bank-copy{
+    width:100%;margin-top:10px;padding:8px;
+    background:#fff;border:1px solid var(--accent);
+    color:var(--accent);border-radius:7px;
+    font-size:13px;font-weight:600;font-family:inherit;
+    cursor:pointer;
+  }
+  .bank-copy:active{opacity:.8;}
+
   .hide{display:none;}
 
   .btn{
@@ -151,9 +177,9 @@
     </div>
 
     <div class="field hide" id="f-nickOther">
-      <label>請輸入 LINE 名字<span class="req">*</span></label>
+      <label>請輸入 LINE 暱稱<span class="req">*</span></label>
       <input type="text" id="nicknameOther" placeholder="您在群組顯示的名字">
-      <div class="err-msg">請輸入名字</div>
+      <div class="err-msg">請輸入暱稱</div>
     </div>
 
     <div class="field" id="f-name">
@@ -196,6 +222,12 @@
       <div class="err-msg">請選擇付款方式</div>
     </div>
 
+    <div class="bank-box hide" id="bankBox">
+      <div class="bank-title">💳 匯款資訊</div>
+      <div id="bankList"></div>
+      <button type="button" class="bank-copy" id="bankCopyBtn">複製帳號</button>
+    </div>
+
     <div class="field hide" id="f-payInfo">
       <label id="payInfoLabel">帳號後五碼<span class="req">*</span></label>
       <input type="text" id="payInfo" placeholder="">
@@ -225,12 +257,12 @@
 <div class="toast" id="toast"></div>
 
 <script>
-/* ============ 設定區：換成你的 GAS 部署網址（結尾 /exec） ============ */
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbx9EKgQkxelVIvZ1cACUx3xmZIG18uGrb4T_mymWkms15M5NMJGy9XW6WX5tWEsC0N6/exec';
+/* ============ 設定區 ============ */
+var GAS_URL = 'https://script.google.com/macros/s/AKfycby-AWvnAxFwTeWOWjVPZMz0-ePoKI8LNIQLUOiDy9e1DkIJ3BJYc9_BAiue_admkMH7/exec';
 var LINEPAY_URL = 'https://line.me/ti/p/taMX75HZDW';
-/* ================================================================== */
+/* ============================== */
 
-var DATA = { groups: [], members: {} };
+var DATA = { groups: [], members: {}, bank: [] };
 var curGroup = null;
 
 /* ---------- JSONP ---------- */
@@ -290,6 +322,7 @@ document.getElementById('group').addEventListener('change', function(){
     nick.innerHTML = '<option value="">請先選擇團別</option>';
     document.getElementById('f-pay').classList.add('hide');
     document.getElementById('f-payInfo').classList.add('hide');
+    document.getElementById('bankBox').classList.add('hide');
     return;
   }
 
@@ -316,6 +349,7 @@ document.getElementById('group').addEventListener('change', function(){
   });
   document.getElementById('f-pay').classList.remove('hide');
   document.getElementById('f-payInfo').classList.add('hide');
+  document.getElementById('bankBox').classList.add('hide');
   bindRadios('payBox', onPayChange);
 
   if (pays.length === 1){
@@ -356,24 +390,29 @@ bindRadios('deliveryBox', function(v){
   }
 });
 
+/* ---------- 付款方式切換 ---------- */
 function onPayChange(v){
   var f = document.getElementById('f-payInfo');
   var lab = document.getElementById('payInfoLabel');
   var inp = document.getElementById('payInfo');
   var hint = document.getElementById('payInfoHint');
+  var bankBox = document.getElementById('bankBox');
   f.classList.remove('hide');
   inp.value = '';
 
   if (v === 'LINEPAY'){
+    bankBox.classList.add('hide');
     lab.innerHTML = 'LINE Pay 轉帳名字<span class="req">*</span>';
     inp.placeholder = '好友轉帳顯示的名字';
     inp.setAttribute('inputmode', 'text');
     hint.innerHTML =
-      '請先加豆媽好友，再用「LINE Pay 好友轉帳」完成付款<br>' +
+      '請先加豆媽好友，再用 LINE Pay 好友轉帳完成付款。<br>' +
       '<a href="' + LINEPAY_URL + '" target="_blank" rel="noopener" class="linepay-btn">' +
       '👉 點我加豆媽好友</a>';
     document.getElementById('payInfoErr').textContent = '請填寫 LINE Pay 名字';
   } else {
+    renderBank();
+    bankBox.classList.remove('hide');
     lab.innerHTML = '帳號後五碼<span class="req">*</span>';
     inp.placeholder = '5 位數字';
     inp.setAttribute('inputmode', 'numeric');
@@ -381,6 +420,30 @@ function onPayChange(v){
     document.getElementById('payInfoErr').textContent = '請填寫 5 位數字';
   }
 }
+
+function renderBank(){
+  var list = document.getElementById('bankList');
+  if (list.dataset.done) return;
+  var html = '';
+  (DATA.bank || []).forEach(function(b){
+    html += '<div class="bank-row"><span class="k">' + b.k +
+            '</span><span class="v">' + b.v + '</span></div>';
+  });
+  list.innerHTML = html || '<div class="bank-row">尚未設定匯款資訊</div>';
+  list.dataset.done = '1';
+
+  // 沒有帳號欄位就隱藏複製鈕
+  var hasAcc = (DATA.bank || []).some(function(b){ return b.k.indexOf('帳號') > -1; });
+  document.getElementById('bankCopyBtn').style.display = hasAcc ? '' : 'none';
+}
+
+document.getElementById('bankCopyBtn').addEventListener('click', function(){
+  var acc = (DATA.bank || []).filter(function(b){
+    return b.k.indexOf('帳號') > -1;
+  })[0];
+  if (!acc){ toast('找不到帳號'); return; }
+  copyText(acc.v, '帳號已複製：' + acc.v);
+});
 
 /* ---------- 驗證 ---------- */
 function bad(id, on){
@@ -466,28 +529,31 @@ document.getElementById('submitBtn').addEventListener('click', function(){
 });
 
 /* ---------- 複製 ---------- */
-document.getElementById('copyBtn').addEventListener('click', function(){
-  var t = document.getElementById('resultText').textContent;
+function copyText(text, okMsg){
   if (navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(t)
-      .then(function(){ toast('已複製，貼回群組就完成囉！'); })
-      .catch(function(){ fallbackCopy(t); });
+    navigator.clipboard.writeText(text)
+      .then(function(){ toast(okMsg); })
+      .catch(function(){ fallbackCopy(text, okMsg); });
   } else {
-    fallbackCopy(t);
+    fallbackCopy(text, okMsg);
   }
-});
+}
 
-function fallbackCopy(t){
+function fallbackCopy(text, okMsg){
   var ta = document.createElement('textarea');
-  ta.value = t;
+  ta.value = text;
   ta.style.position = 'fixed';
   ta.style.opacity = '0';
   document.body.appendChild(ta);
   ta.select();
-  try { document.execCommand('copy'); toast('已複製，貼回群組就完成囉！'); }
-  catch(e){ toast('複製失敗，請長按上方文字手動複製'); }
+  try { document.execCommand('copy'); toast(okMsg); }
+  catch(e){ toast('複製失敗，請手動複製'); }
   document.body.removeChild(ta);
 }
+
+document.getElementById('copyBtn').addEventListener('click', function(){
+  copyText(document.getElementById('resultText').textContent, '已複製，貼回群組就完成囉！');
+});
 
 document.getElementById('againBtn').addEventListener('click', function(){
   location.reload();
