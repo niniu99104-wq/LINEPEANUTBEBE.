@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>付款回報單</title>
+<style>
+  :root{
+    --bg:#faf7f2;
+    --card:#ffffff;
+    --ink:#2f2a26;
+    --muted:#8a8178;
+    --line:#e8e1d8;
+    --accent:#c46b4a;
+    --accent-soft:#fdf1ec;
+    --ok:#4a8c6f;
+    --err:#c0392b;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{
+    margin:0;padding:16px;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+    font-size:16px;line-height:1.6;
+  }
+  .wrap{max-width:520px;margin:0 auto;}
+
+  .head{text-align:center;padding:8px 0 20px;}
+  .head h1{margin:0 0 6px;font-size:22px;letter-spacing:1px;}
+  .head p{margin:0;color:var(--muted);font-size:14px;}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px 18px;
+  }
+
+  .field{margin-bottom:18px;}
+  .field:last-child{margin-bottom:0;}
+  label{display:block;font-size:14px;font-weight:600;margin-bottom:7px;}
+  .req{color:var(--accent);margin-left:3px;}
+  .hint{font-size:12px;color:var(--muted);font-weight:400;margin-top:5px;}
+
+  input[type=text],input[type=tel],select,textarea{
+    width:100%;padding:11px 12px;
+    border:1px solid var(--line);border-radius:9px;
+    font-size:16px;font-family:inherit;color:var(--ink);
+    background:#fff;outline:none;transition:border-color .15s;
+  }
+  input:focus,select:focus,textarea:focus{border-color:var(--accent);}
+  textarea{resize:vertical;min-height:64px;}
+  select:disabled,input:disabled{background:#f5f2ee;color:var(--muted);}
+
+  .radios{display:flex;gap:10px;}
+  .radios label{
+    flex:1;margin:0;
+    border:1px solid var(--line);border-radius:9px;
+    padding:11px 6px;text-align:center;cursor:pointer;
+    font-weight:500;transition:all .15s;
+  }
+  .radios input{position:absolute;opacity:0;pointer-events:none;}
+  .radios label.on{
+    border-color:var(--accent);background:var(--accent-soft);
+    color:var(--accent);font-weight:600;
+  }
+
+  .hide{display:none;}
+
+  .btn{
+    width:100%;padding:14px;
+    border:none;border-radius:10px;
+    background:var(--accent);color:#fff;
+    font-size:17px;font-weight:600;font-family:inherit;
+    cursor:pointer;margin-top:22px;
+  }
+  .btn:active{opacity:.85;}
+  .btn:disabled{background:#ccc;cursor:default;}
+
+  .err-msg{color:var(--err);font-size:13px;margin-top:5px;display:none;}
+  .field.bad input,.field.bad select,.field.bad textarea{border-color:var(--err);}
+  .field.bad .err-msg{display:block;}
+
+  .done{text-align:center;}
+  .done .tick{
+    width:52px;height:52px;border-radius:50%;
+    background:var(--ok);color:#fff;
+    font-size:28px;line-height:52px;margin:0 auto 14px;
+  }
+  .done h2{margin:0 0 6px;font-size:19px;}
+  .done .sub{color:var(--muted);font-size:14px;margin-bottom:18px;}
+  .copybox{
+    background:var(--bg);border:1px dashed var(--line);
+    border-radius:10px;padding:14px;text-align:left;
+    font-size:14px;white-space:pre-wrap;word-break:break-all;
+    line-height:1.75;margin-bottom:14px;
+  }
+  .btn-ghost{
+    background:#fff;color:var(--accent);
+    border:1.5px solid var(--accent);margin-top:8px;
+  }
+  .toast{
+    position:fixed;left:50%;bottom:28px;transform:translateX(-50%);
+    background:rgba(47,42,38,.94);color:#fff;
+    padding:10px 20px;border-radius:20px;font-size:14px;
+    opacity:0;pointer-events:none;transition:opacity .2s;z-index:99;
+  }
+  .toast.on{opacity:1;}
+
+  .loading{text-align:center;padding:40px 0;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="head">
+    <h1>付款回報單</h1>
+    <p>匯款完成後填寫，方便核對出貨 🙏</p>
+  </div>
+
+  <div id="loading" class="card loading">載入中…</div>
+
+  <div id="formCard" class="card hide">
+
+    <div class="field" id="f-group">
+      <label>團別 - 品項<span class="req">*</span></label>
+      <select id="group"><option value="">請選擇</option></select>
+      <div class="err-msg">請選擇團別</div>
+    </div>
+
+    <div class="field" id="f-nick">
+      <label>LINE 顯示名稱<span class="req">*</span></label>
+      <select id="nickname" disabled><option value="">請先選擇團別</option></select>
+      <div class="hint">找不到自己的名字？選最下方「其他」手動輸入</div>
+      <div class="err-msg">請選擇您的暱稱</div>
+    </div>
+
+    <div class="field hide" id="f-nickOther">
+      <label>請輸入 LINE 暱稱<span class="req">*</span></label>
+      <input type="text" id="nicknameOther" placeholder="您在群組顯示的名字">
+      <div class="err-msg">請輸入暱稱</div>
+    </div>
+
+    <div class="field" id="f-name">
+      <label>收件人姓名<span class="req">*</span></label>
+      <input type="text" id="name" placeholder="真實姓名">
+      <div class="err-msg">請填寫姓名</div>
+    </div>
+
+    <div class="field" id="f-phone">
+      <label>收件人電話<span class="req">*</span></label>
+      <input type="tel" id="phone" placeholder="09xxxxxxxx" inputmode="numeric">
+      <div class="err-msg">請填寫正確手機號碼（09開頭共10碼）</div>
+    </div>
+
+    <div class="field" id="f-delivery">
+      <label>取貨方式<span class="req">*</span></label>
+      <div class="radios" id="deliveryBox">
+        <label data-v="交貨便"><input type="radio" name="delivery" value="交貨便">交貨便</label>
+        <label data-v="宅配"><input type="radio" name="delivery" value="宅配">宅配</label>
+      </div>
+      <div class="err-msg">請選擇取貨方式</div>
+    </div>
+
+    <div class="field hide" id="f-store">
+      <label>收件門市<span class="req">*</span></label>
+      <input type="text" id="store" placeholder="例：7-11 大安門市 / 全家 忠孝店">
+      <div class="hint">請填超商品牌 + 門市全名</div>
+      <div class="err-msg">請填寫門市名稱</div>
+    </div>
+
+    <div class="field hide" id="f-addr">
+      <label>收件地址<span class="req">*</span></label>
+      <textarea id="addr" placeholder="請填完整地址（含郵遞區號）"></textarea>
+      <div class="err-msg">請填寫完整地址</div>
+    </div>
+
+    <div class="field hide" id="f-pay">
+      <label>付款方式<span class="req">*</span></label>
+      <div class="radios" id="payBox"></div>
+      <div class="err-msg">請選擇付款方式</div>
+    </div>
+
+    <div class="field hide" id="f-payInfo">
+      <label id="payInfoLabel">帳號後五碼<span class="req">*</span></label>
+      <input type="text" id="payInfo" placeholder="">
+      <div class="hint" id="payInfoHint"></div>
+      <div class="err-msg" id="payInfoErr">請填寫</div>
+    </div>
+
+    <div class="field">
+      <label>備註（選填）</label>
+      <textarea id="note" placeholder="有其他需要說明的再填寫"></textarea>
+    </div>
+
+    <button class="btn" id="submitBtn">送出回報</button>
+  </div>
+
+  <div id="doneCard" class="card done hide">
+    <div class="tick">✓</div>
+    <h2>回報完成！</h2>
+    <div class="sub">請複製下方內容貼回群組，我會盡快核對 😊</div>
+    <div class="copybox" id="resultText"></div>
+    <button class="btn" id="copyBtn">複製內容</button>
+    <button class="btn btn-ghost" id="againBtn">再填一筆</button>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ======== 設定：換成你的 GAS 部署網址（結尾 /exec） ======== */
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbx9EKgQkxelVIvZ1cACUx3xmZIG18uGrb4T_mymWkms15M5NMJGy9XW6WX5tWEsC0N6/exec';
+/* ========================================================== */
+
+var DATA = { groups: [], members: {} };
+var curGroup = null;
+
+/* ---------- JSONP 讀取 ---------- */
+function jsonp(params, onOk, onErr){
+  var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
+  var script = document.createElement('script');
+  var timer = setTimeout(function(){ cleanup(); onErr && onErr('timeout'); }, 20000);
+
+  function cleanup(){
+    clearTimeout(timer);
+    try { delete window[cbName]; } catch(e){ window[cbName] = undefined; }
+    if (script.parentNode) script.parentNode.removeChild(script);
+  }
+
+  window[cbName] = function(res){ cleanup(); onOk && onOk(res); };
+
+  var qs = Object.keys(params).map(function(k){
+    return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+  }).join('&');
+
+  script.src = GAS_URL + '?' + qs + '&callback=' + cbName;
+  script.onerror = function(){ cleanup(); onErr && onErr('network'); };
+  document.head.appendChild(script);
+}
+
+/* ---------- 初始化 ---------- */
+jsonp({ action: 'init' }, function(res){
+  if (!res.ok){
+    document.getElementById('loading').textContent = '載入失敗：' + res.msg;
+    return;
+  }
+  DATA = res.data;
+  var sel = document.getElementById('group');
+  DATA.groups.forEach(function(g){
+    var o = document.createElement('option');
+    o.value = g.name; o.textContent = g.name;
+    sel.appendChild(o);
+  });
+  document.getElementById('loading').classList.add('hide');
+  document.getElementById('formCard').classList.remove('hide');
+}, function(){
+  document.getElementById('loading').textContent = '載入失敗，請重新整理頁面';
+});
+
+/* ---------- 團別連動 ---------- */
+document.getElementById('group').addEventListener('change', function(){
+  var g = this.value;
+  curGroup = DATA.groups.filter(function(x){ return x.name === g; })[0] || null;
+
+  var nick = document.getElementById('nickname');
+  nick.innerHTML = '';
+  document.getElementById('f-nickOther').classList.add('hide');
+  document.getElementById('nicknameOther').value = '';
+
+  if (!g){
+    nick.disabled = true;
+    nick.innerHTML = '<option value="">請先選擇團別</option>';
+    document.getElementById('f-pay').classList.add('hide');
+    document.getElementById('f-payInfo').classList.add('hide');
+    return;
+  }
+
+  nick.disabled = false;
+  nick.innerHTML = '<option value="">請選擇</option>';
+  (DATA.members[g] || []).forEach(function(n){
+    var o = document.createElement('option');
+    o.value = n; o.textContent = n;
+    nick.appendChild(o);
+  });
+  var other = document.createElement('option');
+  other.value = '__other__'; other.textContent = '其他（手動輸入）';
+  nick.appendChild(other);
+
+  var box = document.getElementById('payBox');
+  box.innerHTML = '';
+  var pays = curGroup ? curGroup.pays : ['匯款'];
+  pays.forEach(function(p){
+    var lab = document.createElement('label');
+    lab.setAttribute('data-v', p);
+    lab.innerHTML = '<input type="radio" name="pay" value="' + p + '">' +
+                    (p === 'LINEPAY' ? 'LINE Pay' : '匯款/轉帳');
+    box.appendChild(lab);
+  });
+  document.getElementById('f-pay').classList.remove('hide');
+  document.getElementById('f-payInfo').classList.add('hide');
+  bindRadios('payBox', onPayChange);
+
+  if (pays.length === 1){
+    box.querySelector('input').checked = true;
+    box.querySelector('label').classList.add('on');
+    onPayChange(pays[0]);
+  }
+});
+
+document.getElementById('nickname').addEventListener('change', function(){
+  var f = document.getElementById('f-nickOther');
+  if (this.value === '__other__') f.classList.remove('hide');
+  else { f.classList.add('hide'); document.getElementById('nicknameOther').value = ''; }
+});
+
+/* ---------- 單選 ---------- */
+function bindRadios(boxId, cb){
+  var box = document.getElementById(boxId);
+  box.querySelectorAll('label').forEach(function(lab){
+    lab.addEventListener('click', function(){
+      box.querySelectorAll('label').forEach(function(l){ l.classList.remove('on'); });
+      lab.classList.add('on');
+      lab.querySelector('input').checked = true;
+      cb(lab.getAttribute('data-v'));
+    });
+  });
+}
+
+bindRadios('deliveryBox', function(v){
+  var s = document.getElementById('f-store');
+  var a = document.getElementById('f-addr');
+  if (v === '交貨便'){ s.classList.remove('hide'); a.classList.add('hide'); document.getElementById('addr').value=''; }
+  else { a.classList.remove('hide'); s.classList.add('hide'); document.getElementById('store').value=''; }
+});
+
+function onPayChange(v){
+  var f = document.getElementById('f-payInfo');
+  var lab = document.getElementById('payInfoLabel');
+  var inp = document.getElementById('payInfo');
+  var hint = document.getElementById('payInfoHint');
+  f.classList.remove('hide');
+  inp.value = '';
+  if (v === 'LINEPAY'){
+    lab.innerHTML = 'LINE Pay 轉帳名字<span class="req">*</span>';
+    inp.placeholder = '好友轉帳顯示的名字';
+    inp.setAttribute('inputmode','text');
+    hint.textContent = '請填您 LINE Pay 轉帳時顯示的名稱';
+    document.getElementById('payInfoErr').textContent = '請填寫 LINE Pay 名字';
+  } else {
+    lab.innerHTML = '帳號後五碼<span class="req">*</span>';
+    inp.placeholder = '5 位數字';
+    inp.setAttribute('inputmode','numeric');
+    hint.textContent = '您轉出帳號的最後五碼';
+    document.getElementById('payInfoErr').textContent = '請填寫 5 位數字';
+  }
+}
+
+/* ---------- 驗證 ---------- */
+function bad(id, on){
+  document.getElementById(id).classList.toggle('bad', on);
+  return !on;
+}
+
+function validate(){
+  var ok = true;
+  ok &= bad('f-group', !document.getElementById('group').value);
+
+  var nick = document.getElementById('nickname').value;
+  ok &= bad('f-nick', !nick);
+  if (nick === '__other__'){
+    ok &= bad('f-nickOther', !document.getElementById('nicknameOther').value.trim());
+  }
+
+  ok &= bad('f-name', !document.getElementById('name').value.trim());
+  ok &= bad('f-phone', !/^09\d{8}$/.test(document.getElementById('phone').value.trim()));
+
+  var dv = document.querySelector('input[name=delivery]:checked');
+  ok &= bad('f-delivery', !dv);
+  if (dv){
+    if (dv.value === '交貨便') ok &= bad('f-store', !document.getElementById('store').value.trim());
+    else ok &= bad('f-addr', !document.getElementById('addr').value.trim());
+  }
+
+  var pv = document.querySelector('input[name=pay]:checked');
+  ok &= bad('f-pay', !pv);
+  if (pv){
+    var pi = document.getElementById('payInfo').value.trim();
+    if (pv.value === 'LINEPAY') ok &= bad('f-payInfo', !pi);
+    else ok &= bad('f-payInfo', !/^\d{5}$/.test(pi));
+  }
+  return !!ok;
+}
+
+/* ---------- 送出（JSONP，可拿到回傳文字） ---------- */
+document.getElementById('submitBtn').addEventListener('click', function(){
+  if (!validate()){
+    var first = document.querySelector('.field.bad');
+    if (first) first.scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+  var btn = this;
+  btn.disabled = true;
+  btn.textContent = '送出中…';
+
+  var nick = document.getElementById('nickname').value;
+  if (nick === '__other__') nick = document.getElementById('nicknameOther').value.trim();
+
+  var dv = document.querySelector('input[name=delivery]:checked').value;
+  var pv = document.querySelector('input[name=pay]:checked').value;
+
+  var payload = {
+    group: document.getElementById('group').value,
+    nickname: nick,
+    name: document.getElementById('name').value.trim(),
+    phone: document.getElementById('phone').value.trim(),
+    delivery: dv,
+    address: dv === '交貨便'
+      ? document.getElementById('store').value.trim()
+      : document.getElementById('addr').value.trim(),
+    payMethod: pv,
+    payInfo: document.getElementById('payInfo').value.trim(),
+    note: document.getElementById('note').value.trim()
+  };
+
+  jsonp({ action: 'submit', payload: JSON.stringify(payload) }, function(res){
+    if (res.ok){
+      document.getElementById('formCard').classList.add('hide');
+      document.getElementById('resultText').textContent = res.text;
+      document.getElementById('doneCard').classList.remove('hide');
+      window.scrollTo(0,0);
+    } else {
+      toast('送出失敗：' + res.msg);
+      btn.disabled = false; btn.textContent = '送出回報';
+    }
+  }, function(){
+    toast('連線錯誤，請再試一次');
+    btn.disabled = false; btn.textContent = '送出回報';
+  });
+});
+
+/* ---------- 複製 ---------- */
+document.getElementById('copyBtn').addEventListener('click', function(){
+  var t = document.getElementById('resultText').textContent;
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t)
+      .then(function(){ toast('已複製，貼回群組就完成囉！'); })
+      .catch(function(){ fallbackCopy(t); });
+  } else {
+    fallbackCopy(t);
+  }
+});
+
+function fallbackCopy(t){
+  var ta = document.createElement('textarea');
+  ta.value = t;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); toast('已複製，貼回群組就完成囉！'); }
+  catch(e){ toast('複製失敗，請長按上方文字手動複製'); }
+  document.body.removeChild(ta);
+}
+
+document.getElementById('againBtn').addEventListener('click', function(){
+  location.reload();
+});
+
+function toast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  setTimeout(function(){ t.classList.remove('on'); }, 2200);
+}
+</script>
+</body>
+</html>
