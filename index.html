@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>付款回報單</title>
+<title>豆媽選品｜付款回報單</title>
 <style>
   :root{
     --bg:#faf7f2;
@@ -151,9 +151,9 @@
     </div>
 
     <div class="field hide" id="f-nickOther">
-      <label>請輸入 LINE 暱稱<span class="req">*</span></label>
+      <label>請輸入 LINE 名字<span class="req">*</span></label>
       <input type="text" id="nicknameOther" placeholder="您在群組顯示的名字">
-      <div class="err-msg">請輸入暱稱</div>
+      <div class="err-msg">請輸入名字</div>
     </div>
 
     <div class="field" id="f-name">
@@ -369,7 +369,7 @@ function onPayChange(v){
     inp.placeholder = '好友轉帳顯示的名字';
     inp.setAttribute('inputmode', 'text');
     hint.innerHTML =
-      '請先加豆媽好友，用 LINE Pay 好友轉帳完成付款，再回來填寫轉帳時顯示的名稱<br>' +
+      '請先加豆媽好友，再用「LINE Pay 好友轉帳」完成付款<br>' +
       '<a href="' + LINEPAY_URL + '" target="_blank" rel="noopener" class="linepay-btn">' +
       '👉 點我加豆媽好友</a>';
     document.getElementById('payInfoErr').textContent = '請填寫 LINE Pay 名字';
