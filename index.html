@@ -55,7 +55,7 @@
   textarea{resize:vertical;min-height:64px;}
   select:disabled,input:disabled{background:#f5f2ee;color:var(--muted);}
 
-  /* 金額區 */
+  /* 金額明細區 */
   .amount-box{
     background:linear-gradient(135deg,#fff4ee,#fdeae1);
     border:1px solid #f0d0c0;
@@ -63,18 +63,40 @@
     padding:16px 18px;
     margin-bottom:18px;
   }
-  .amount-box .cap{font-size:13px;color:var(--muted);margin-bottom:2px;}
-  .amount-box .big{
-    font-size:30px;font-weight:800;color:var(--amount);
-    letter-spacing:.5px;line-height:1.2;
+  .amount-row{
+    display:flex;justify-content:space-between;
+    font-size:14px;padding:2px 0;color:#7a5a48;
   }
-  .amount-box .big small{font-size:16px;font-weight:600;margin-right:2px;}
-  .amount-box .unpaid{
+  .amount-row .free{color:var(--ok);font-weight:600;}
+  .amount-total{
+    display:flex;justify-content:space-between;align-items:baseline;
+    margin-top:10px;padding-top:10px;border-top:1px dashed #eab89f;
+  }
+  .amount-total .cap{font-size:13px;color:var(--muted);}
+  .amount-total .big{
+    font-size:28px;font-weight:800;color:var(--amount);letter-spacing:.5px;
+  }
+  .amount-total .big small{font-size:15px;font-weight:600;margin-right:2px;}
+  .ship-tip{
+    margin-top:8px;font-size:12px;color:#a05a3a;line-height:1.6;
+  }
+  .unpaid{
     margin-top:10px;padding-top:10px;
     border-top:1px dashed #eab89f;
     font-size:13px;color:#a05a3a;line-height:1.7;
   }
-  .amount-box .unpaid b{font-weight:700;}
+  .unpaid b{font-weight:700;}
+
+  /* 合併訂單勾選 */
+  .merge-box{
+    display:flex;gap:10px;align-items:flex-start;
+    background:#fff;border:1px solid #f0d0c0;border-radius:10px;
+    padding:12px 14px;margin-top:10px;cursor:pointer;
+  }
+  .merge-box input{margin-top:3px;width:18px;height:18px;flex-shrink:0;accent-color:var(--accent);}
+  .merge-box .txt{font-size:13px;line-height:1.6;}
+  .merge-box .txt b{color:var(--accent);}
+  .merge-box .txt .sub{color:var(--muted);font-size:12px;}
 
   .radios{display:flex;gap:10px;}
   .radios label{
@@ -97,11 +119,8 @@
   .linepay-btn:active{opacity:.85;}
 
   .bank-box{
-    background:var(--accent-soft);
-    border:1px solid #f0d9cf;
-    border-radius:10px;
-    padding:14px 16px;
-    margin:-6px 0 18px;
+    background:var(--accent-soft);border:1px solid #f0d9cf;
+    border-radius:10px;padding:14px 16px;margin:-6px 0 18px;
   }
   .bank-title{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px;}
   .bank-row{display:flex;justify-content:space-between;gap:12px;font-size:14px;padding:3px 0;}
@@ -161,7 +180,7 @@
 
   <div class="head">
     <h1>豆媽選品｜結帳付款回報單</h1>
-    <p>選擇團別與姓名確認金額，填寫並完成匯款後送出 🙏</p>
+    <p>選擇團別與姓名確認金額，填寫並匯款完成後送出 🙏</p>
   </div>
 
   <div id="loading" class="card loading">載入中…</div>
@@ -187,13 +206,6 @@
       <div class="err-msg">請輸入暱稱</div>
     </div>
 
-    <!-- 金額區 -->
-    <div class="amount-box hide" id="amountBox">
-      <div class="cap">本團應付金額</div>
-      <div class="big"><small>$</small><span id="amountVal">0</span></div>
-      <div class="unpaid hide" id="unpaidBox"></div>
-    </div>
-
     <div class="field" id="f-name">
       <label>收件人姓名<span class="req">*</span></label>
       <input type="text" id="name" placeholder="真實姓名">
@@ -212,6 +224,7 @@
         <label data-v="交貨便"><input type="radio" name="delivery" value="交貨便">交貨便</label>
         <label data-v="宅配"><input type="radio" name="delivery" value="宅配">宅配</label>
       </div>
+      <div class="hint">交貨便滿 $1500 免運，未滿 +$60｜宅配滿 $2000 免運，未滿 +$100</div>
       <div class="err-msg">請選擇取貨方式</div>
     </div>
 
@@ -226,6 +239,27 @@
       <label>收件地址<span class="req">*</span></label>
       <textarea id="addr" placeholder="請填完整地址（含郵遞區號）"></textarea>
       <div class="err-msg">請填寫完整地址</div>
+    </div>
+
+    <!-- 金額明細（選完取貨方式後出現） -->
+    <div class="amount-box hide" id="amountBox">
+      <div class="amount-row"><span>商品金額</span><span>$<span id="goodsVal">0</span></span></div>
+      <div class="amount-row" id="shipRow"><span>運費</span><span id="shipVal">$0</span></div>
+      <div class="amount-total">
+        <span class="cap">應付總額</span>
+        <span class="big"><small>$</small><span id="totalVal">0</span></span>
+      </div>
+      <div class="ship-tip hide" id="shipTip"></div>
+
+      <label class="merge-box hide" id="mergeBox">
+        <input type="checkbox" id="mergeChk">
+        <span class="txt">
+          <b>合併其他未付訂單一起結帳</b><br>
+          <span id="mergeDesc"></span>
+          <span class="sub">合併會等商品全部到齊才寄出；若拆單，運費另計。</span>
+        </span>
+      </label>
+      <div class="unpaid hide" id="unpaidBox"></div>
     </div>
 
     <div class="field hide" id="f-pay">
@@ -270,13 +304,19 @@
 
 <script>
 /* ============ 設定區 ============ */
-var GAS_URL = 'https://script.google.com/macros/s/AKfycby-AWvnAxFwTeWOWjVPZMz0-ePoKI8LNIQLUOiDy9e1DkIJ3BJYc9_BAiue_admkMH7/exec';
+var GAS_URL = 'https://script.google.com/macros/s/你的部署ID/exec';
 var LINEPAY_URL = 'https://line.me/ti/p/taMX75HZDW';
+
+/* 運費規則 */
+var SHIP_RULE = {
+  '交貨便': { threshold: 1500, fee: 60 },
+  '宅配':   { threshold: 2000, fee: 100 }
+};
 /* ============================== */
 
 var DATA = { groups: [], members: {}, amounts: {}, bank: [] };
 var curGroup = null;
-var curAmount = 0;
+var state = { nick: '', delivery: '', goods: 0, otherTotal: 0, otherList: [] };
 
 /* ---------- JSONP ---------- */
 function jsonp(params, onOk, onErr){
@@ -325,7 +365,7 @@ document.getElementById('group').addEventListener('change', function(){
   nick.innerHTML = '';
   document.getElementById('f-nickOther').classList.add('hide');
   document.getElementById('nicknameOther').value = '';
-  hideAmount();
+  resetAmount();
 
   if (!g){
     nick.disabled = true;
@@ -361,7 +401,6 @@ document.getElementById('group').addEventListener('change', function(){
   document.getElementById('f-payInfo').classList.add('hide');
   document.getElementById('bankBox').classList.add('hide');
   bindRadios('payBox', onPayChange);
-
   if (pays.length === 1){
     box.querySelector('input').checked = true;
     box.querySelector('label').classList.add('on');
@@ -369,59 +408,130 @@ document.getElementById('group').addEventListener('change', function(){
   }
 });
 
-/* ---------- 選暱稱 → 顯示金額 ---------- */
+/* ---------- 選暱稱 ---------- */
 document.getElementById('nickname').addEventListener('change', function(){
   var v = this.value;
   var fOther = document.getElementById('f-nickOther');
 
   if (v === '__other__'){
     fOther.classList.remove('hide');
-    hideAmount();
+    resetAmount();
     return;
   }
   fOther.classList.add('hide');
   document.getElementById('nicknameOther').value = '';
 
-  if (!v){ hideAmount(); return; }
-  showAmount(curGroup ? curGroup.name : '', v);
-});
+  if (!v){ resetAmount(); return; }
 
-function showAmount(group, nick){
-  var amt = (DATA.amounts[group] && DATA.amounts[group][nick]) || 0;
-  curAmount = amt;
-  document.getElementById('amountVal').textContent = amt.toLocaleString();
-  document.getElementById('amountBox').classList.remove('hide');
+  var group = curGroup ? curGroup.name : '';
+  state.nick = v;
+  state.goods = (DATA.amounts[group] && DATA.amounts[group][v]) || 0;
 
-  // 跨團未付統計（排除目前這團）
-  var others = [];
-  Object.keys(DATA.amounts).forEach(function(g){
-    if (g === group) return;
-    var a = DATA.amounts[g][nick];
-    if (a && a > 0) others.push({ g: g, a: a });
+  // 其他未付團
+  state.otherList = [];
+  state.otherTotal = 0;
+  Object.keys(DATA.amounts).forEach(function(gg){
+    if (gg === group) return;
+    var a = DATA.amounts[gg][v];
+    if (a && a > 0){ state.otherList.push({ g: gg, a: a }); state.otherTotal += a; }
   });
 
+  recalc();
+});
+
+/* ---------- 取貨方式 ---------- */
+bindRadios('deliveryBox', function(v){
+  var s = document.getElementById('f-store');
+  var a = document.getElementById('f-addr');
+  if (v === '交貨便'){
+    s.classList.remove('hide'); a.classList.add('hide');
+    document.getElementById('addr').value = '';
+  } else {
+    a.classList.remove('hide'); s.classList.add('hide');
+    document.getElementById('store').value = '';
+  }
+  state.delivery = v;
+  recalc();
+});
+
+/* ---------- 合併勾選 ---------- */
+document.getElementById('mergeChk').addEventListener('change', recalc);
+
+/* ---------- 金額 / 運費計算 ---------- */
+function recalc(){
+  // 條件不足就先收起
+  if (!state.nick || !state.delivery){
+    document.getElementById('amountBox').classList.add('hide');
+    return;
+  }
+
+  var merge = document.getElementById('mergeChk').checked && state.otherList.length > 0;
+  var goods = state.goods + (merge ? state.otherTotal : 0);
+
+  var rule = SHIP_RULE[state.delivery] || { threshold: 0, fee: 0 };
+  var shipping = goods >= rule.threshold ? 0 : rule.fee;
+  var total = goods + shipping;
+
+  document.getElementById('goodsVal').textContent = goods.toLocaleString();
+  document.getElementById('totalVal').textContent = total.toLocaleString();
+
+  var shipVal = document.getElementById('shipVal');
+  var shipRow = document.getElementById('shipRow');
+  if (shipping === 0){
+    shipVal.innerHTML = '<span class="free">免運 $0</span>';
+  } else {
+    shipVal.textContent = '$' + shipping;
+  }
+  shipRow.classList.remove('hide');
+
+  // 差多少免運的提示
+  var tip = document.getElementById('shipTip');
+  if (shipping > 0){
+    var diff = rule.threshold - goods;
+    tip.textContent = '再買 $' + diff.toLocaleString() +
+      ' 即可享免運（滿 $' + rule.threshold.toLocaleString() + '）';
+    tip.classList.remove('hide');
+  } else {
+    tip.classList.add('hide');
+  }
+
+  // 合併勾選框
+  var mBox = document.getElementById('mergeBox');
+  if (state.otherList.length > 0){
+    document.getElementById('mergeDesc').innerHTML =
+      '另有 ' + state.otherList.length + ' 團未付，合計 $' +
+      state.otherTotal.toLocaleString() + '<br>';
+    mBox.classList.remove('hide');
+  } else {
+    mBox.classList.add('hide');
+  }
+
+  // 未合併時，下方列出其他未付團提醒
   var ub = document.getElementById('unpaidBox');
-  if (others.length){
-    var total = others.reduce(function(s, o){ return s + o.a; }, 0);
-    var listHtml = others.map(function(o){
+  if (state.otherList.length > 0 && !merge){
+    var listHtml = state.otherList.map(function(o){
       return '・' + o.g + '　$' + o.a.toLocaleString();
     }).join('<br>');
-    ub.innerHTML = '⚠️ 您另外還有 <b>' + others.length +
-      '</b> 團未付款（共 $' + total.toLocaleString() + '）：<br>' + listHtml +
-      '<br>記得也要分別回報唷！';
+    ub.innerHTML = '⚠️ 未勾選合併，以下 <b>' + state.otherList.length +
+      '</b> 團請記得分別回報：<br>' + listHtml;
     ub.classList.remove('hide');
   } else {
     ub.classList.add('hide');
   }
+
+  document.getElementById('amountBox').classList.remove('hide');
+
+  // 存到 state 供送出使用
+  state.calc = { merge: merge, goods: goods, shipping: shipping, total: total };
 }
 
-function hideAmount(){
-  curAmount = 0;
+function resetAmount(){
+  state = { nick: '', delivery: state.delivery, goods: 0, otherTotal: 0, otherList: [] };
   document.getElementById('amountBox').classList.add('hide');
-  document.getElementById('unpaidBox').classList.add('hide');
+  document.getElementById('mergeChk').checked = false;
 }
 
-/* ---------- 單選 ---------- */
+/* ---------- 單選共用 ---------- */
 function bindRadios(boxId, cb){
   var box = document.getElementById(boxId);
   box.querySelectorAll('label').forEach(function(lab){
@@ -434,18 +544,7 @@ function bindRadios(boxId, cb){
   });
 }
 
-bindRadios('deliveryBox', function(v){
-  var s = document.getElementById('f-store');
-  var a = document.getElementById('f-addr');
-  if (v === '交貨便'){
-    s.classList.remove('hide'); a.classList.add('hide');
-    document.getElementById('addr').value = '';
-  } else {
-    a.classList.remove('hide'); s.classList.add('hide');
-    document.getElementById('store').value = '';
-  }
-});
-
+/* ---------- 付款方式 ---------- */
 function onPayChange(v){
   var f = document.getElementById('f-payInfo');
   var lab = document.getElementById('payInfoLabel');
@@ -548,6 +647,7 @@ document.getElementById('submitBtn').addEventListener('click', function(){
 
   var dv = document.querySelector('input[name=delivery]:checked').value;
   var pv = document.querySelector('input[name=pay]:checked').value;
+  var c = state.calc || { merge:false, goods:0, shipping:0, total:0 };
 
   var payload = {
     group: document.getElementById('group').value,
@@ -560,7 +660,10 @@ document.getElementById('submitBtn').addEventListener('click', function(){
       : document.getElementById('addr').value.trim(),
     payMethod: pv,
     payInfo: document.getElementById('payInfo').value.trim(),
-    amount: curAmount,
+    merge: c.merge,
+    goods: c.goods,
+    shipping: c.shipping,
+    amount: c.total,
     note: document.getElementById('note').value.trim()
   };
 
