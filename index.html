@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>豆媽選品｜付款回報單</title>
+<title>豆媽選品｜結帳付款回報單</title>
 <style>
   :root{
     --bg:#faf7f2;
@@ -16,6 +16,7 @@
     --ok:#4a8c6f;
     --err:#c0392b;
     --linepay:#06C755;
+    --amount:#b8532f;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   body{
@@ -54,6 +55,27 @@
   textarea{resize:vertical;min-height:64px;}
   select:disabled,input:disabled{background:#f5f2ee;color:var(--muted);}
 
+  /* 金額區 */
+  .amount-box{
+    background:linear-gradient(135deg,#fff4ee,#fdeae1);
+    border:1px solid #f0d0c0;
+    border-radius:12px;
+    padding:16px 18px;
+    margin-bottom:18px;
+  }
+  .amount-box .cap{font-size:13px;color:var(--muted);margin-bottom:2px;}
+  .amount-box .big{
+    font-size:30px;font-weight:800;color:var(--amount);
+    letter-spacing:.5px;line-height:1.2;
+  }
+  .amount-box .big small{font-size:16px;font-weight:600;margin-right:2px;}
+  .amount-box .unpaid{
+    margin-top:10px;padding-top:10px;
+    border-top:1px dashed #eab89f;
+    font-size:13px;color:#a05a3a;line-height:1.7;
+  }
+  .amount-box .unpaid b{font-weight:700;}
+
   .radios{display:flex;gap:10px;}
   .radios label{
     flex:1;margin:0;
@@ -68,15 +90,9 @@
   }
 
   .linepay-btn{
-    display:inline-block;
-    margin-top:8px;
-    padding:9px 18px;
-    background:var(--linepay);
-    color:#fff;
-    border-radius:7px;
-    font-size:13px;
-    font-weight:600;
-    text-decoration:none;
+    display:inline-block;margin-top:8px;padding:9px 18px;
+    background:var(--linepay);color:#fff;border-radius:7px;
+    font-size:13px;font-weight:600;text-decoration:none;
   }
   .linepay-btn:active{opacity:.85;}
 
@@ -87,22 +103,15 @@
     padding:14px 16px;
     margin:-6px 0 18px;
   }
-  .bank-title{
-    font-size:13px;font-weight:700;
-    color:var(--accent);margin-bottom:10px;
-  }
-  .bank-row{
-    display:flex;justify-content:space-between;
-    gap:12px;font-size:14px;padding:3px 0;
-  }
+  .bank-title{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px;}
+  .bank-row{display:flex;justify-content:space-between;gap:12px;font-size:14px;padding:3px 0;}
   .bank-row .k{color:var(--muted);flex-shrink:0;}
   .bank-row .v{font-weight:600;text-align:right;word-break:break-all;}
   .bank-copy{
     width:100%;margin-top:10px;padding:8px;
     background:#fff;border:1px solid var(--accent);
     color:var(--accent);border-radius:7px;
-    font-size:13px;font-weight:600;font-family:inherit;
-    cursor:pointer;
+    font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;
   }
   .bank-copy:active{opacity:.8;}
 
@@ -136,10 +145,7 @@
     font-size:14px;white-space:pre-wrap;word-break:break-all;
     line-height:1.75;margin-bottom:14px;
   }
-  .btn-ghost{
-    background:#fff;color:var(--accent);
-    border:1.5px solid var(--accent);margin-top:8px;
-  }
+  .btn-ghost{background:#fff;color:var(--accent);border:1.5px solid var(--accent);margin-top:8px;}
   .toast{
     position:fixed;left:50%;bottom:28px;transform:translateX(-50%);
     background:rgba(47,42,38,.94);color:#fff;
@@ -147,7 +153,6 @@
     opacity:0;pointer-events:none;transition:opacity .2s;z-index:99;
   }
   .toast.on{opacity:1;}
-
   .loading{text-align:center;padding:40px 0;color:var(--muted);}
 </style>
 </head>
@@ -155,8 +160,8 @@
 <div class="wrap">
 
   <div class="head">
-    <h1>付款回報單</h1>
-    <p>匯款完成後填寫，方便核對出貨 🙏</p>
+    <h1>豆媽選品｜結帳付款回報單</h1>
+    <p>選擇團別與姓名確認金額，填寫並完成匯款後送出 🙏</p>
   </div>
 
   <div id="loading" class="card loading">載入中…</div>
@@ -182,6 +187,13 @@
       <div class="err-msg">請輸入暱稱</div>
     </div>
 
+    <!-- 金額區 -->
+    <div class="amount-box hide" id="amountBox">
+      <div class="cap">本團應付金額</div>
+      <div class="big"><small>$</small><span id="amountVal">0</span></div>
+      <div class="unpaid hide" id="unpaidBox"></div>
+    </div>
+
     <div class="field" id="f-name">
       <label>收件人姓名<span class="req">*</span></label>
       <input type="text" id="name" placeholder="真實姓名">
@@ -197,7 +209,7 @@
     <div class="field" id="f-delivery">
       <label>取貨方式<span class="req">*</span></label>
       <div class="radios" id="deliveryBox">
-        <label data-v="7-11交貨便"><input type="radio" name="delivery" value="7-11交貨便">7-11交貨便</label>
+        <label data-v="交貨便"><input type="radio" name="delivery" value="交貨便">交貨便</label>
         <label data-v="宅配"><input type="radio" name="delivery" value="宅配">宅配</label>
       </div>
       <div class="err-msg">請選擇取貨方式</div>
@@ -205,7 +217,7 @@
 
     <div class="field hide" id="f-store">
       <label>收件門市<span class="req">*</span></label>
-      <input type="text" id="store" placeholder="例：7-11大安門市，店號：12345">
+      <input type="text" id="store" placeholder="例：7-11 大安門市 / 全家 忠孝店">
       <div class="hint">請填超商品牌 + 門市全名</div>
       <div class="err-msg">請填寫門市名稱</div>
     </div>
@@ -258,31 +270,28 @@
 
 <script>
 /* ============ 設定區 ============ */
-var GAS_URL = 'https://script.google.com/macros/s/AKfycby-AWvnAxFwTeWOWjVPZMz0-ePoKI8LNIQLUOiDy9e1DkIJ3BJYc9_BAiue_admkMH7/exec';
+var GAS_URL = 'https://script.google.com/macros/s/你的部署ID/exec';
 var LINEPAY_URL = 'https://line.me/ti/p/taMX75HZDW';
 /* ============================== */
 
-var DATA = { groups: [], members: {}, bank: [] };
+var DATA = { groups: [], members: {}, amounts: {}, bank: [] };
 var curGroup = null;
+var curAmount = 0;
 
 /* ---------- JSONP ---------- */
 function jsonp(params, onOk, onErr){
   var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
   var script = document.createElement('script');
   var timer = setTimeout(function(){ cleanup(); onErr && onErr('timeout'); }, 20000);
-
   function cleanup(){
     clearTimeout(timer);
     try { delete window[cbName]; } catch(e){ window[cbName] = undefined; }
     if (script.parentNode) script.parentNode.removeChild(script);
   }
-
   window[cbName] = function(res){ cleanup(); onOk && onOk(res); };
-
   var qs = Object.keys(params).map(function(k){
     return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
   }).join('&');
-
   script.src = GAS_URL + '?' + qs + '&callback=' + cbName;
   script.onerror = function(){ cleanup(); onErr && onErr('network'); };
   document.head.appendChild(script);
@@ -316,6 +325,7 @@ document.getElementById('group').addEventListener('change', function(){
   nick.innerHTML = '';
   document.getElementById('f-nickOther').classList.add('hide');
   document.getElementById('nicknameOther').value = '';
+  hideAmount();
 
   if (!g){
     nick.disabled = true;
@@ -359,11 +369,57 @@ document.getElementById('group').addEventListener('change', function(){
   }
 });
 
+/* ---------- 選暱稱 → 顯示金額 ---------- */
 document.getElementById('nickname').addEventListener('change', function(){
-  var f = document.getElementById('f-nickOther');
-  if (this.value === '__other__') f.classList.remove('hide');
-  else { f.classList.add('hide'); document.getElementById('nicknameOther').value = ''; }
+  var v = this.value;
+  var fOther = document.getElementById('f-nickOther');
+
+  if (v === '__other__'){
+    fOther.classList.remove('hide');
+    hideAmount();
+    return;
+  }
+  fOther.classList.add('hide');
+  document.getElementById('nicknameOther').value = '';
+
+  if (!v){ hideAmount(); return; }
+  showAmount(curGroup ? curGroup.name : '', v);
 });
+
+function showAmount(group, nick){
+  var amt = (DATA.amounts[group] && DATA.amounts[group][nick]) || 0;
+  curAmount = amt;
+  document.getElementById('amountVal').textContent = amt.toLocaleString();
+  document.getElementById('amountBox').classList.remove('hide');
+
+  // 跨團未付統計（排除目前這團）
+  var others = [];
+  Object.keys(DATA.amounts).forEach(function(g){
+    if (g === group) return;
+    var a = DATA.amounts[g][nick];
+    if (a && a > 0) others.push({ g: g, a: a });
+  });
+
+  var ub = document.getElementById('unpaidBox');
+  if (others.length){
+    var total = others.reduce(function(s, o){ return s + o.a; }, 0);
+    var listHtml = others.map(function(o){
+      return '・' + o.g + '　$' + o.a.toLocaleString();
+    }).join('<br>');
+    ub.innerHTML = '⚠️ 您另外還有 <b>' + others.length +
+      '</b> 團未付款（共 $' + total.toLocaleString() + '）：<br>' + listHtml +
+      '<br>記得也要分別回報唷！';
+    ub.classList.remove('hide');
+  } else {
+    ub.classList.add('hide');
+  }
+}
+
+function hideAmount(){
+  curAmount = 0;
+  document.getElementById('amountBox').classList.add('hide');
+  document.getElementById('unpaidBox').classList.add('hide');
+}
 
 /* ---------- 單選 ---------- */
 function bindRadios(boxId, cb){
@@ -381,7 +437,7 @@ function bindRadios(boxId, cb){
 bindRadios('deliveryBox', function(v){
   var s = document.getElementById('f-store');
   var a = document.getElementById('f-addr');
-  if (v === '7-11交貨便'){
+  if (v === '交貨便'){
     s.classList.remove('hide'); a.classList.add('hide');
     document.getElementById('addr').value = '';
   } else {
@@ -390,7 +446,6 @@ bindRadios('deliveryBox', function(v){
   }
 });
 
-/* ---------- 付款方式切換 ---------- */
 function onPayChange(v){
   var f = document.getElementById('f-payInfo');
   var lab = document.getElementById('payInfoLabel');
@@ -406,7 +461,7 @@ function onPayChange(v){
     inp.placeholder = '好友轉帳顯示的名字';
     inp.setAttribute('inputmode', 'text');
     hint.innerHTML =
-      '請先加豆媽好友，再用 LINE Pay 好友轉帳完成付款。<br>' +
+      '請先加豆媽好友，用 LINE Pay 好友轉帳完成付款，再回來填寫轉帳時顯示的名稱<br>' +
       '<a href="' + LINEPAY_URL + '" target="_blank" rel="noopener" class="linepay-btn">' +
       '👉 點我加豆媽好友</a>';
     document.getElementById('payInfoErr').textContent = '請填寫 LINE Pay 名字';
@@ -431,16 +486,12 @@ function renderBank(){
   });
   list.innerHTML = html || '<div class="bank-row">尚未設定匯款資訊</div>';
   list.dataset.done = '1';
-
-  // 沒有帳號欄位就隱藏複製鈕
   var hasAcc = (DATA.bank || []).some(function(b){ return b.k.indexOf('帳號') > -1; });
   document.getElementById('bankCopyBtn').style.display = hasAcc ? '' : 'none';
 }
 
 document.getElementById('bankCopyBtn').addEventListener('click', function(){
-  var acc = (DATA.bank || []).filter(function(b){
-    return b.k.indexOf('帳號') > -1;
-  })[0];
+  var acc = (DATA.bank || []).filter(function(b){ return b.k.indexOf('帳號') > -1; })[0];
   if (!acc){ toast('找不到帳號'); return; }
   copyText(acc.v, '帳號已複製：' + acc.v);
 });
@@ -467,7 +518,7 @@ function validate(){
   var dv = document.querySelector('input[name=delivery]:checked');
   ok &= bad('f-delivery', !dv);
   if (dv){
-    if (dv.value === '7-11交貨便') ok &= bad('f-store', !document.getElementById('store').value.trim());
+    if (dv.value === '交貨便') ok &= bad('f-store', !document.getElementById('store').value.trim());
     else ok &= bad('f-addr', !document.getElementById('addr').value.trim());
   }
 
@@ -504,11 +555,12 @@ document.getElementById('submitBtn').addEventListener('click', function(){
     name: document.getElementById('name').value.trim(),
     phone: document.getElementById('phone').value.trim(),
     delivery: dv,
-    address: dv === '7-11交貨便'
+    address: dv === '交貨便'
       ? document.getElementById('store').value.trim()
       : document.getElementById('addr').value.trim(),
     payMethod: pv,
     payInfo: document.getElementById('payInfo').value.trim(),
+    amount: curAmount,
     note: document.getElementById('note').value.trim()
   };
 
@@ -538,14 +590,10 @@ function copyText(text, okMsg){
     fallbackCopy(text, okMsg);
   }
 }
-
 function fallbackCopy(text, okMsg){
   var ta = document.createElement('textarea');
-  ta.value = text;
-  ta.style.position = 'fixed';
-  ta.style.opacity = '0';
-  document.body.appendChild(ta);
-  ta.select();
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
   try { document.execCommand('copy'); toast(okMsg); }
   catch(e){ toast('複製失敗，請手動複製'); }
   document.body.removeChild(ta);
@@ -554,15 +602,11 @@ function fallbackCopy(text, okMsg){
 document.getElementById('copyBtn').addEventListener('click', function(){
   copyText(document.getElementById('resultText').textContent, '已複製，貼回群組就完成囉！');
 });
-
-document.getElementById('againBtn').addEventListener('click', function(){
-  location.reload();
-});
+document.getElementById('againBtn').addEventListener('click', function(){ location.reload(); });
 
 function toast(msg){
   var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('on');
+  t.textContent = msg; t.classList.add('on');
   setTimeout(function(){ t.classList.remove('on'); }, 2200);
 }
 </script>
