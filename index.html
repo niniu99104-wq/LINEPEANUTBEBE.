@@ -55,7 +55,6 @@
   textarea{resize:vertical;min-height:64px;}
   select:disabled,input:disabled{background:#f5f2ee;color:var(--muted);}
 
-  /* 金額明細區 */
   .amount-box{
     background:linear-gradient(135deg,#fff4ee,#fdeae1);
     border:1px solid #f0d0c0;
@@ -77,9 +76,7 @@
     font-size:28px;font-weight:800;color:var(--amount);letter-spacing:.5px;
   }
   .amount-total .big small{font-size:15px;font-weight:600;margin-right:2px;}
-  .ship-tip{
-    margin-top:8px;font-size:12px;color:#a05a3a;line-height:1.6;
-  }
+  .ship-tip{margin-top:8px;font-size:12px;color:#a05a3a;line-height:1.6;}
   .unpaid{
     margin-top:10px;padding-top:10px;
     border-top:1px dashed #eab89f;
@@ -87,7 +84,6 @@
   }
   .unpaid b{font-weight:700;}
 
-  /* 合併訂單勾選 */
   .merge-box{
     display:flex;gap:10px;align-items:flex-start;
     background:#fff;border:1px solid #f0d0c0;border-radius:10px;
@@ -180,7 +176,7 @@
 
   <div class="head">
     <h1>豆媽選品｜結帳付款回報單</h1>
-    <p>選擇團別與姓名確認金額，填寫並匯款完成後送出 🙏</p>
+    <p>選擇團別與姓名確認金額，填寫並完成匯款後送出 🙏</p>
   </div>
 
   <div id="loading" class="card loading">載入中…</div>
@@ -224,7 +220,7 @@
         <label data-v="交貨便"><input type="radio" name="delivery" value="交貨便">交貨便</label>
         <label data-v="宅配"><input type="radio" name="delivery" value="宅配">宅配</label>
       </div>
-      <div class="hint">交貨便滿 $1500 免運，未滿 +$60｜宅配滿 $2000 免運，未滿 +$100</div>
+      <div class="hint" id="shipRuleHint">交貨便滿 $1500 免運，未滿 +$60｜宅配滿 $2000 免運，未滿 +$100</div>
       <div class="err-msg">請選擇取貨方式</div>
     </div>
 
@@ -241,7 +237,6 @@
       <div class="err-msg">請填寫完整地址</div>
     </div>
 
-    <!-- 金額明細（選完取貨方式後出現） -->
     <div class="amount-box hide" id="amountBox">
       <div class="amount-row"><span>商品金額</span><span>$<span id="goodsVal">0</span></span></div>
       <div class="amount-row" id="shipRow"><span>運費</span><span id="shipVal">$0</span></div>
@@ -367,6 +362,14 @@ document.getElementById('group').addEventListener('change', function(){
   document.getElementById('nicknameOther').value = '';
   resetAmount();
 
+  // 免運團的門檻提示調整
+  var hint = document.getElementById('shipRuleHint');
+  if (curGroup && curGroup.freeShip){
+    hint.textContent = '🎉 本團全面免運！';
+  } else {
+    hint.textContent = '交貨便滿 $1500 免運，未滿 +$60｜宅配滿 $2000 免運，未滿 +$100';
+  }
+
   if (!g){
     nick.disabled = true;
     nick.innerHTML = '<option value="">請先選擇團別</option>';
@@ -427,7 +430,6 @@ document.getElementById('nickname').addEventListener('change', function(){
   state.nick = v;
   state.goods = (DATA.amounts[group] && DATA.amounts[group][v]) || 0;
 
-  // 其他未付團
   state.otherList = [];
   state.otherTotal = 0;
   Object.keys(DATA.amounts).forEach(function(gg){
@@ -454,12 +456,10 @@ bindRadios('deliveryBox', function(v){
   recalc();
 });
 
-/* ---------- 合併勾選 ---------- */
 document.getElementById('mergeChk').addEventListener('change', recalc);
 
 /* ---------- 金額 / 運費計算 ---------- */
 function recalc(){
-  // 條件不足就先收起
   if (!state.nick || !state.delivery){
     document.getElementById('amountBox').classList.add('hide');
     return;
@@ -469,22 +469,23 @@ function recalc(){
   var goods = state.goods + (merge ? state.otherTotal : 0);
 
   var rule = SHIP_RULE[state.delivery] || { threshold: 0, fee: 0 };
-  var shipping = goods >= rule.threshold ? 0 : rule.fee;
+  var freeShip = curGroup && curGroup.freeShip;
+  var shipping = (freeShip || goods >= rule.threshold) ? 0 : rule.fee;
   var total = goods + shipping;
 
   document.getElementById('goodsVal').textContent = goods.toLocaleString();
   document.getElementById('totalVal').textContent = total.toLocaleString();
 
   var shipVal = document.getElementById('shipVal');
-  var shipRow = document.getElementById('shipRow');
   if (shipping === 0){
-    shipVal.innerHTML = '<span class="free">免運 $0</span>';
+    shipVal.innerHTML = freeShip
+      ? '<span class="free">本團免運 $0</span>'
+      : '<span class="free">免運 $0</span>';
   } else {
     shipVal.textContent = '$' + shipping;
   }
-  shipRow.classList.remove('hide');
+  document.getElementById('shipRow').classList.remove('hide');
 
-  // 差多少免運的提示
   var tip = document.getElementById('shipTip');
   if (shipping > 0){
     var diff = rule.threshold - goods;
@@ -495,7 +496,6 @@ function recalc(){
     tip.classList.add('hide');
   }
 
-  // 合併勾選框
   var mBox = document.getElementById('mergeBox');
   if (state.otherList.length > 0){
     document.getElementById('mergeDesc').innerHTML =
@@ -506,7 +506,6 @@ function recalc(){
     mBox.classList.add('hide');
   }
 
-  // 未合併時，下方列出其他未付團提醒
   var ub = document.getElementById('unpaidBox');
   if (state.otherList.length > 0 && !merge){
     var listHtml = state.otherList.map(function(o){
@@ -520,8 +519,6 @@ function recalc(){
   }
 
   document.getElementById('amountBox').classList.remove('hide');
-
-  // 存到 state 供送出使用
   state.calc = { merge: merge, goods: goods, shipping: shipping, total: total };
 }
 
