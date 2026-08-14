@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>豆媽選品｜結帳付款回報單</title>
+<title>付款回報單</title>
 <style>
   :root{
     --bg:#faf7f2;
@@ -54,6 +54,18 @@
   input:focus,select:focus,textarea:focus{border-color:var(--accent);}
   textarea{resize:vertical;min-height:64px;}
   select:disabled,input:disabled{background:#f5f2ee;color:var(--muted);}
+
+  /* 已完成結帳 */
+  .paid-box{
+    background:linear-gradient(135deg,#eafaf1,#dff5e8);
+    border:1px solid #b6e2c8;
+    border-radius:12px;
+    padding:22px 18px;text-align:center;
+    margin-bottom:18px;
+  }
+  .paid-box .paid-tick{font-size:36px;line-height:1;margin-bottom:8px;}
+  .paid-box .paid-title{font-size:18px;font-weight:800;color:var(--ok);}
+  .paid-box .paid-sub{font-size:13px;color:#5a8a70;margin-top:5px;line-height:1.6;}
 
   .amount-box{
     background:linear-gradient(135deg,#fff4ee,#fdeae1);
@@ -175,8 +187,8 @@
 <div class="wrap">
 
   <div class="head">
-    <h1>豆媽選品｜結帳付款回報單</h1>
-    <p>選擇團別與姓名確認金額，填寫並完成匯款後送出 🙏</p>
+    <h1>付款回報單</h1>
+    <p>選擇團別與姓名確認金額，匯款後填寫送出 🙏</p>
   </div>
 
   <div id="loading" class="card loading">載入中…</div>
@@ -200,6 +212,13 @@
       <label>請輸入 LINE 暱稱<span class="req">*</span></label>
       <input type="text" id="nicknameOther" placeholder="您在群組顯示的名字">
       <div class="err-msg">請輸入暱稱</div>
+    </div>
+
+    <!-- 已完成結帳提示 -->
+    <div class="paid-box hide" id="paidBox">
+      <div class="paid-tick">👌</div>
+      <div class="paid-title">此團已完成結帳</div>
+      <div class="paid-sub">款項已核對成功，感謝您的訂購！</div>
     </div>
 
     <div class="field" id="f-name">
@@ -276,7 +295,7 @@
       <div class="err-msg" id="payInfoErr">請填寫</div>
     </div>
 
-    <div class="field">
+    <div class="field" id="f-note">
       <label>備註（選填）</label>
       <textarea id="note" placeholder="有其他需要說明的再填寫"></textarea>
     </div>
@@ -309,7 +328,7 @@ var SHIP_RULE = {
 };
 /* ============================== */
 
-var DATA = { groups: [], members: {}, amounts: {}, bank: [] };
+var DATA = { groups: [], members: {}, amounts: {}, allPaid: {}, bank: [] };
 var curGroup = null;
 var state = { nick: '', delivery: '', goods: 0, otherTotal: 0, otherList: [] };
 
@@ -339,6 +358,7 @@ jsonp({ action: 'init' }, function(res){
     return;
   }
   DATA = res.data;
+  if (!DATA.allPaid) DATA.allPaid = {};
   var sel = document.getElementById('group');
   DATA.groups.forEach(function(g){
     var o = document.createElement('option');
@@ -361,8 +381,8 @@ document.getElementById('group').addEventListener('change', function(){
   document.getElementById('f-nickOther').classList.add('hide');
   document.getElementById('nicknameOther').value = '';
   resetAmount();
+  hidePaid();
 
-  // 免運團的門檻提示調整
   var hint = document.getElementById('shipRuleHint');
   if (curGroup && curGroup.freeShip){
     hint.textContent = '🎉 本團全面免運！';
@@ -418,15 +438,24 @@ document.getElementById('nickname').addEventListener('change', function(){
 
   if (v === '__other__'){
     fOther.classList.remove('hide');
+    hidePaid();
     resetAmount();
     return;
   }
   fOther.classList.add('hide');
   document.getElementById('nicknameOther').value = '';
 
-  if (!v){ resetAmount(); return; }
+  if (!v){ hidePaid(); resetAmount(); return; }
 
   var group = curGroup ? curGroup.name : '';
+
+  // 已付清 → 顯示完成結帳，收起後面欄位
+  if (DATA.allPaid[group] && DATA.allPaid[group][v]){
+    showPaid();
+    return;
+  }
+  hidePaid();
+
   state.nick = v;
   state.goods = (DATA.amounts[group] && DATA.amounts[group][v]) || 0;
 
@@ -441,15 +470,44 @@ document.getElementById('nickname').addEventListener('change', function(){
   recalc();
 });
 
+/* ---------- 已完成結帳 ---------- */
+function showPaid(){
+  document.getElementById('paidBox').classList.remove('hide');
+  document.getElementById('amountBox').classList.add('hide');
+  toggleFormAfterNick(true);
+}
+function hidePaid(){
+  document.getElementById('paidBox').classList.add('hide');
+  toggleFormAfterNick(false);
+}
+function toggleFormAfterNick(hide){
+  var ids = ['f-name','f-phone','f-delivery','f-store','f-addr',
+             'f-pay','bankBox','f-payInfo','f-note','submitBtn'];
+  ids.forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.style.display = hide ? 'none' : '';
+  });
+  // 恢復時交貨便/宅配的門市或地址欄仍照原邏輯，先都收起避免露出
+  if (!hide){
+    document.getElementById('f-store').style.display = 'none';
+    document.getElementById('f-addr').style.display = 'none';
+    var dv = document.querySelector('input[name=delivery]:checked');
+    if (dv){
+      if (dv.value === '交貨便') document.getElementById('f-store').style.display = '';
+      else document.getElementById('f-addr').style.display = '';
+    }
+  }
+}
+
 /* ---------- 取貨方式 ---------- */
 bindRadios('deliveryBox', function(v){
   var s = document.getElementById('f-store');
   var a = document.getElementById('f-addr');
   if (v === '交貨便'){
-    s.classList.remove('hide'); a.classList.add('hide');
+    s.style.display = ''; a.style.display = 'none';
     document.getElementById('addr').value = '';
   } else {
-    a.classList.remove('hide'); s.classList.add('hide');
+    a.style.display = ''; s.style.display = 'none';
     document.getElementById('store').value = '';
   }
   state.delivery = v;
