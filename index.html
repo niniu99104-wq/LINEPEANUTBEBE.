@@ -158,6 +158,20 @@
   .field.bad input,.field.bad select,.field.bad textarea{border-color:var(--err);}
   .field.bad .err-msg{display:block;}
 
+  /* 送出失敗總提示 */
+  .submit-alert{
+    display:none;
+    margin-top:14px;
+    background:#fdecea;
+    border:1px solid #f5c6c0;
+    color:var(--err);
+    border-radius:9px;
+    padding:11px 14px;
+    font-size:14px;font-weight:600;
+    text-align:center;
+  }
+  .submit-alert.on{display:block;}
+
   .done{text-align:center;}
   .done .tick{
     width:52px;height:52px;border-radius:50%;
@@ -301,6 +315,7 @@
     </div>
 
     <button class="btn" id="submitBtn">送出回報</button>
+    <div class="submit-alert" id="submitAlert">⚠️ 還有欄位未填寫完整，請檢查紅色框處後再送出</div>
   </div>
 
   <div id="doneCard" class="card done hide">
@@ -382,6 +397,7 @@ document.getElementById('group').addEventListener('change', function(){
   document.getElementById('nicknameOther').value = '';
   resetAmount();
   hidePaid();
+  hideSubmitAlert();
 
   var hint = document.getElementById('shipRuleHint');
   if (curGroup && curGroup.freeShip){
@@ -435,6 +451,7 @@ document.getElementById('group').addEventListener('change', function(){
 document.getElementById('nickname').addEventListener('change', function(){
   var v = this.value;
   var fOther = document.getElementById('f-nickOther');
+  hideSubmitAlert();
 
   if (v === '__other__'){
     fOther.classList.remove('hide');
@@ -449,7 +466,6 @@ document.getElementById('nickname').addEventListener('change', function(){
 
   var group = curGroup ? curGroup.name : '';
 
-  // 已付清 → 顯示完成結帳，收起後面欄位
   if (DATA.allPaid[group] && DATA.allPaid[group][v]){
     showPaid();
     return;
@@ -487,7 +503,6 @@ function toggleFormAfterNick(hide){
     var el = document.getElementById(id);
     if (el) el.style.display = hide ? 'none' : '';
   });
-  // 恢復時交貨便/宅配的門市或地址欄仍照原邏輯，先都收起避免露出
   if (!hide){
     document.getElementById('f-store').style.display = 'none';
     document.getElementById('f-addr').style.display = 'none';
@@ -686,13 +701,18 @@ function validate(){
   return !!ok;
 }
 
+function showSubmitAlert(){ document.getElementById('submitAlert').classList.add('on'); }
+function hideSubmitAlert(){ document.getElementById('submitAlert').classList.remove('on'); }
+
 /* ---------- 送出 ---------- */
 document.getElementById('submitBtn').addEventListener('click', function(){
   if (!validate()){
+    showSubmitAlert();
     var first = document.querySelector('.field.bad');
     if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
+  hideSubmitAlert();
   var btn = this;
   btn.disabled = true;
   btn.textContent = '送出中…';
