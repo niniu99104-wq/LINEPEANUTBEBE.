@@ -224,7 +224,7 @@
 
     <div class="field hide" id="f-nickOther">
       <label>請輸入 LINE 暱稱<span class="req">*</span></label>
-      <input type="text" id="nicknameOther" placeholder="您在群組顯示的名字">
+      <input type="text" id="nicknameOther" placeholder="您在社群中顯示的名字">
       <div class="err-msg">請輸入暱稱</div>
     </div>
 
@@ -321,7 +321,7 @@
   <div id="doneCard" class="card done hide">
     <div class="tick">✓</div>
     <h2>回報完成！</h2>
-    <div class="sub">請複製下方內容貼回群組，我會盡快核對 😊</div>
+    <div class="sub">請複製下方內容貼至官方帳號，我會盡快核對 😊</div>
     <div class="copybox" id="resultText"></div>
     <button class="btn" id="copyBtn">複製內容</button>
     <button class="btn btn-ghost" id="againBtn">再填一筆</button>
@@ -813,7 +813,7 @@ function fallbackCopy(text, okMsg){
 }
 
 document.getElementById('copyBtn').addEventListener('click', function(){
-  copyText(document.getElementById('resultText').textContent, '已複製，貼回群組就完成囉！');
+  copyText(document.getElementById('resultText').textContent, '已複製，貼至官方帳號就完成囉！');
 });
 document.getElementById('againBtn').addEventListener('click', function(){ location.reload(); });
 
@@ -825,3 +825,4 @@ function toast(msg){
 </script>
 </body>
 </html>
+ㄍ關
