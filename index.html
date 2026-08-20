@@ -504,12 +504,14 @@ function toggleFormAfterNick(hide){
     if (el) el.style.display = hide ? 'none' : '';
   });
   if (!hide){
-    document.getElementById('f-store').style.display = 'none';
-    document.getElementById('f-addr').style.display = 'none';
+    var s = document.getElementById('f-store');
+    var a = document.getElementById('f-addr');
+    s.classList.add('hide'); s.style.display = 'none';
+    a.classList.add('hide'); a.style.display = 'none';
     var dv = document.querySelector('input[name=delivery]:checked');
     if (dv){
-      if (dv.value === '交貨便') document.getElementById('f-store').style.display = '';
-      else document.getElementById('f-addr').style.display = '';
+      if (dv.value === '交貨便'){ s.classList.remove('hide'); s.style.display = ''; }
+      else { a.classList.remove('hide'); a.style.display = ''; }
     }
   }
 }
@@ -518,11 +520,14 @@ function toggleFormAfterNick(hide){
 bindRadios('deliveryBox', function(v){
   var s = document.getElementById('f-store');
   var a = document.getElementById('f-addr');
+  hideSubmitAlert();
   if (v === '交貨便'){
-    s.style.display = ''; a.style.display = 'none';
+    s.classList.remove('hide'); s.style.display = '';
+    a.classList.add('hide');    a.style.display = 'none';
     document.getElementById('addr').value = '';
   } else {
-    a.style.display = ''; s.style.display = 'none';
+    a.classList.remove('hide'); a.style.display = '';
+    s.classList.add('hide');    s.style.display = 'none';
     document.getElementById('store').value = '';
   }
   state.delivery = v;
@@ -672,42 +677,72 @@ function bad(id, on){
 }
 
 function validate(){
-  var ok = true;
-  ok &= bad('f-group', !document.getElementById('group').value);
+  var problems = [];  // 收集缺漏項目，最後給明確提示
 
-  var nick = document.getElementById('nickname').value;
-  ok &= bad('f-nick', !nick);
-  if (nick === '__other__'){
-    ok &= bad('f-nickOther', !document.getElementById('nicknameOther').value.trim());
+  // 先清掉所有紅框
+  ['f-group','f-nick','f-nickOther','f-name','f-phone',
+   'f-delivery','f-store','f-addr','f-pay','f-payInfo'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.classList.remove('bad');
+  });
+
+  function fail(id, label){
+    var el = document.getElementById(id);
+    if (el) el.classList.add('bad');
+    problems.push(label);
   }
 
-  ok &= bad('f-name', !document.getElementById('name').value.trim());
-  ok &= bad('f-phone', !/^09\d{8}$/.test(document.getElementById('phone').value.trim()));
+  if (!document.getElementById('group').value) fail('f-group', '團別');
+
+  var nick = document.getElementById('nickname').value;
+  if (!nick) {
+    fail('f-nick', 'LINE 顯示名稱');
+  } else if (nick === '__other__' && !document.getElementById('nicknameOther').value.trim()) {
+    fail('f-nickOther', 'LINE 暱稱');
+  }
+
+  if (!document.getElementById('name').value.trim()) fail('f-name', '收件人姓名');
+
+  if (!/^09\d{8}$/.test(document.getElementById('phone').value.trim())) {
+    fail('f-phone', '電話（09開頭共10碼）');
+  }
 
   var dv = document.querySelector('input[name=delivery]:checked');
-  ok &= bad('f-delivery', !dv);
-  if (dv){
-    if (dv.value === '交貨便') ok &= bad('f-store', !document.getElementById('store').value.trim());
-    else ok &= bad('f-addr', !document.getElementById('addr').value.trim());
+  if (!dv) {
+    fail('f-delivery', '取貨方式');
+  } else if (dv.value === '交貨便') {
+    if (!document.getElementById('store').value.trim()) fail('f-store', '收件門市');
+  } else {
+    if (!document.getElementById('addr').value.trim()) fail('f-addr', '收件地址');
   }
 
   var pv = document.querySelector('input[name=pay]:checked');
-  ok &= bad('f-pay', !pv);
-  if (pv){
+  if (!pv) {
+    fail('f-pay', '付款方式');
+  } else {
     var pi = document.getElementById('payInfo').value.trim();
-    if (pv.value === 'LINEPAY') ok &= bad('f-payInfo', !pi);
-    else ok &= bad('f-payInfo', !/^\d{5}$/.test(pi));
+    if (pv.value === 'LINEPAY') {
+      if (!pi) fail('f-payInfo', 'LINE Pay 名字');
+    } else {
+      if (!/^\d{5}$/.test(pi)) fail('f-payInfo', '帳號後五碼（需5位數字）');
+    }
   }
-  return !!ok;
+
+  return problems;  // 空陣列 = 通過
 }
 
-function showSubmitAlert(){ document.getElementById('submitAlert').classList.add('on'); }
+function showSubmitAlert(msg){
+  var el = document.getElementById('submitAlert');
+  el.textContent = msg;
+  el.classList.add('on');
+}
 function hideSubmitAlert(){ document.getElementById('submitAlert').classList.remove('on'); }
 
 /* ---------- 送出 ---------- */
 document.getElementById('submitBtn').addEventListener('click', function(){
-  if (!validate()){
-    showSubmitAlert();
+  var problems = validate();
+  if (problems.length > 0){
+    showSubmitAlert('⚠️ 請確認：' + problems.join('、'));
     var first = document.querySelector('.field.bad');
     if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
