@@ -224,7 +224,7 @@
 
     <div class="field hide" id="f-nickOther">
       <label>請輸入 LINE 暱稱<span class="req">*</span></label>
-      <input type="text" id="nicknameOther" placeholder="您在社群中顯示的名字">
+      <input type="text" id="nicknameOther" placeholder="您在群組顯示的名字">
       <div class="err-msg">請輸入暱稱</div>
     </div>
 
@@ -321,7 +321,7 @@
   <div id="doneCard" class="card done hide">
     <div class="tick">✓</div>
     <h2>回報完成！</h2>
-    <div class="sub">請複製下方內容貼至官方帳號，我會盡快核對 😊</div>
+    <div class="sub">請複製下方內容貼回群組，我會盡快核對 😊</div>
     <div class="copybox" id="resultText"></div>
     <button class="btn" id="copyBtn">複製內容</button>
     <button class="btn btn-ghost" id="againBtn">再填一筆</button>
@@ -333,7 +333,7 @@
 
 <script>
 /* ============ 設定區 ============ */
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbyJTQq1KZNsJhdwWJEmixqsOuDxAdTTOux8n6HXmGCIdxkA5805iDCUM-Sm58Fc7EsI/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbxFLWeS6vCa9wLbVqjfNyrEaiDp2MpxPNrSYJlXs4GCVn4Ng-bMC9bEKFhu4TbB3b2F/exec';
 var LINEPAY_URL = 'https://line.me/ti/p/taMX75HZDW';
 
 /* 運費規則 */
@@ -548,7 +548,10 @@ function recalc(){
 
   var rule = SHIP_RULE[state.delivery] || { threshold: 0, fee: 0 };
   var freeShip = curGroup && curGroup.freeShip;
-  var shipping = (freeShip || goods >= rule.threshold) ? 0 : rule.fee;
+  // 有自訂門檻就用它，否則用預設門檻
+  var threshold = (curGroup && curGroup.freeThreshold > 0)
+    ? curGroup.freeThreshold : rule.threshold;
+  var shipping = (freeShip || goods >= threshold) ? 0 : rule.fee;
   var total = goods + shipping;
 
   document.getElementById('goodsVal').textContent = goods.toLocaleString();
@@ -566,9 +569,9 @@ function recalc(){
 
   var tip = document.getElementById('shipTip');
   if (shipping > 0){
-    var diff = rule.threshold - goods;
+    var diff = threshold - goods;
     tip.textContent = '再買 $' + diff.toLocaleString() +
-      ' 即可享免運（滿 $' + rule.threshold.toLocaleString() + '）';
+      ' 即可享免運（滿 $' + threshold.toLocaleString() + '）';
     tip.classList.remove('hide');
   } else {
     tip.classList.add('hide');
@@ -813,7 +816,7 @@ function fallbackCopy(text, okMsg){
 }
 
 document.getElementById('copyBtn').addEventListener('click', function(){
-  copyText(document.getElementById('resultText').textContent, '已複製，貼至官方帳號就完成囉！');
+  copyText(document.getElementById('resultText').textContent, '已複製，貼回群組就完成囉！');
 });
 document.getElementById('againBtn').addEventListener('click', function(){ location.reload(); });
 
