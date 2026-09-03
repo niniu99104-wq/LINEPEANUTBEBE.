@@ -497,7 +497,7 @@
 
 <script>
 /* ============ 設定區 ============ */
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbwPlIK6PNxK3BcuFYAaHOx5uD-vTIUfua5rOMrkOoZs9VCOrd36QsAk-b_TRr1Ccftw/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbz4cKcHBbgl7w5mpXLe8vrbINLJ1LI4NBmTKrySASJWj2xVOcn_kwwMa4CK_FRZULrt/exec';
 var LINEPAY_URL = 'https://line.me/ti/p/taMX75HZDW';
 
 /* 運費規則 */
@@ -516,7 +516,7 @@ var state = { nick: '', delivery: '', goods: 0, otherTotal: 0, otherList: [] };
 function jsonp(params, onOk, onErr){
   var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
   var script = document.createElement('script');
-  var timer = setTimeout(function(){ cleanup(); onErr && onErr('timeout'); }, 20000);
+  var timer = setTimeout(function(){ cleanup(); onErr && onErr('timeout'); }, 30000);
   function cleanup(){
     clearTimeout(timer);
     try { delete window[cbName]; } catch(e){ window[cbName] = undefined; }
@@ -531,25 +531,36 @@ function jsonp(params, onOk, onErr){
   document.head.appendChild(script);
 }
 
-/* ---------- 初始化 ---------- */
-jsonp({ action: 'init' }, function(res){
-  if (!res.ok){
-    document.getElementById('loading').textContent = '載入失敗：' + res.msg;
-    return;
-  }
-  DATA = res.data;
-  if (!DATA.allPaid) DATA.allPaid = {};
-  var sel = document.getElementById('group');
-  DATA.groups.forEach(function(g){
-    var o = document.createElement('option');
-    o.value = g.name; o.textContent = g.name;
-    sel.appendChild(o);
+/* ---------- 初始化（失敗自動重試一次） ---------- */
+function loadInit(attempt){
+  jsonp({ action: 'init' }, function(res){
+    if (!res.ok){
+      document.getElementById('loading').textContent = '載入失敗：' + res.msg;
+      return;
+    }
+    DATA = res.data;
+    if (!DATA.allPaid) DATA.allPaid = {};
+    var sel = document.getElementById('group');
+    sel.innerHTML = '<option value="">請選擇</option>';
+    DATA.groups.forEach(function(g){
+      var o = document.createElement('option');
+      o.value = g.name; o.textContent = g.name;
+      sel.appendChild(o);
+    });
+    document.getElementById('loading').classList.add('hide');
+    document.getElementById('loginCard').classList.remove('hide');
+  }, function(){
+    if (attempt < 2){
+      document.getElementById('loading').textContent = '載入中…（重新嘗試）';
+      setTimeout(function(){ loadInit(attempt + 1); }, 1200);
+    } else {
+      document.getElementById('loading').innerHTML =
+        '載入失敗，網路較慢<br><br>' +
+        '<button class="btn" onclick="location.reload()" style="max-width:200px;margin:0 auto;">重新載入</button>';
+    }
   });
-  document.getElementById('loading').classList.add('hide');
-  document.getElementById('loginCard').classList.remove('hide');
-}, function(){
-  document.getElementById('loading').textContent = '載入失敗，請重新整理頁面';
-});
+}
+loadInit(1);
 
 /* ---------- 登入頁：團別連動 ---------- */
 document.getElementById('group').addEventListener('change', function(){
@@ -707,16 +718,6 @@ document.getElementById('regBtn').addEventListener('click', function(){
 function enterForm(record){
   var group = curGroup ? curGroup.name : '';
 
-  // 計算金額狀態
-  state.goods = (DATA.amounts[group] && DATA.amounts[group][state.nick]) || 0;
-  state.otherList = [];
-  state.otherTotal = 0;
-  Object.keys(DATA.amounts).forEach(function(gg){
-    if (gg === group) return;
-    var a = DATA.amounts[gg][state.nick];
-    if (a && a > 0){ state.otherList.push({ g: gg, a: a }); state.otherTotal += a; }
-  });
-
   // 切畫面
   document.getElementById('loginCard').classList.add('hide');
   document.getElementById('registerCard').classList.add('hide');
@@ -762,7 +763,20 @@ function enterForm(record){
     state.lastAddr  = record.address || '';
   }
 
-  recalc();
+  // 金額改登入後單獨查詢（首頁不載入）
+  state.goods = 0;
+  state.otherList = [];
+  state.otherTotal = 0;
+  document.getElementById('amountBox').classList.add('hide');
+  jsonp({ action: 'myOrder', group: group, nickname: state.nick }, function(res){
+    if (res.ok && res.data){
+      state.goods = res.data.goods || 0;
+      state.otherList = (res.data.others || []).map(function(o){ return { g:o.g, a:o.a }; });
+      state.otherTotal = state.otherList.reduce(function(s,o){ return s + o.a; }, 0);
+    }
+    recalc();
+  }, function(){ recalc(); });
+
   window.scrollTo(0,0);
 }
 
