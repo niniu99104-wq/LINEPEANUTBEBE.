@@ -142,6 +142,16 @@
   }
   .bank-copy:active{opacity:.8;}
 
+  .pickup-box{
+    background:linear-gradient(135deg,#eafaf1,#dff5e8);
+    border:1px solid #b6e2c8;
+    border-radius:10px;
+    padding:14px 16px;margin-bottom:18px;
+  }
+  .pickup-title{font-size:14px;font-weight:700;color:var(--ok);margin-bottom:6px;}
+  .pickup-sub{font-size:13px;color:#5a8a70;line-height:1.7;}
+  .pickup-sub b{color:var(--ok);}
+
   .hide{display:none;}
 
   .btn{
@@ -252,6 +262,7 @@
       <div class="radios" id="deliveryBox">
         <label data-v="交貨便"><input type="radio" name="delivery" value="交貨便">交貨便</label>
         <label data-v="宅配"><input type="radio" name="delivery" value="宅配">宅配</label>
+        <label data-v="自取"><input type="radio" name="delivery" value="自取">自取</label>
       </div>
       <div class="hint" id="shipRuleHint">交貨便滿 $1500 免運，未滿 +$60｜宅配滿 $2000 免運，未滿 +$100</div>
       <div class="err-msg">請選擇取貨方式</div>
@@ -268,6 +279,14 @@
       <label>收件地址<span class="req">*</span></label>
       <textarea id="addr" placeholder="請填完整地址（含郵遞區號）"></textarea>
       <div class="err-msg">請填寫完整地址</div>
+    </div>
+
+    <div class="pickup-box hide" id="pickupBox">
+      <div class="pickup-title">🏠 自取（免運）</div>
+      <div class="pickup-sub">
+        到貨後會再通知您領取時間 😊<br>
+        <b>新朋友請記得私訊官方帳號，告知您的社群內名稱唷！</b>
+      </div>
     </div>
 
     <div class="amount-box hide" id="amountBox">
@@ -333,13 +352,14 @@
 
 <script>
 /* ============ 設定區 ============ */
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbxFLWeS6vCa9wLbVqjfNyrEaiDp2MpxPNrSYJlXs4GCVn4Ng-bMC9bEKFhu4TbB3b2F/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbyolsJly-5a_BbTuE2J2CcstLhO3QEJzZahMXXpP_4QUKuPxTncyOuYxTnCKQxR28_G/exec';
 var LINEPAY_URL = 'https://line.me/ti/p/taMX75HZDW';
 
 /* 運費規則 */
 var SHIP_RULE = {
   '交貨便': { threshold: 1500, fee: 60 },
-  '宅配':   { threshold: 2000, fee: 100 }
+  '宅配':   { threshold: 2000, fee: 100 },
+  '自取':   { threshold: 0, fee: 0 }
 };
 /* ============================== */
 
@@ -472,6 +492,12 @@ document.getElementById('nickname').addEventListener('change', function(){
   }
   hidePaid();
 
+  // 清空前一位的收件資料，避免殘留
+  document.getElementById('name').value = '';
+  document.getElementById('phone').value = '';
+  document.getElementById('store').value = '';
+  document.getElementById('addr').value = '';
+
   state.nick = v;
   state.goods = (DATA.amounts[group] && DATA.amounts[group][v]) || 0;
 
@@ -484,7 +510,33 @@ document.getElementById('nickname').addEventListener('change', function(){
   });
 
   recalc();
+  fetchLastRecord(v);
 });
+
+/* ---------- 帶入上次收件資料 ---------- */
+function fetchLastRecord(nick){
+  state.lastStore = '';
+  state.lastAddr = '';
+  jsonp({ action: 'lastRecord', nickname: nick }, function(res){
+    if (!res.ok || !res.data) return;
+    var d = res.data;
+    if (d.name)  document.getElementById('name').value  = d.name;
+    if (d.phone) document.getElementById('phone').value = d.phone;
+    state.lastStore = d.store || '';
+    state.lastAddr  = d.address || '';
+    // 若已選好取貨方式，立即帶入對應欄位
+    var dv = document.querySelector('input[name=delivery]:checked');
+    if (dv){
+      if (dv.value === '交貨便' && state.lastStore &&
+          !document.getElementById('store').value)
+        document.getElementById('store').value = state.lastStore;
+      if (dv.value === '宅配' && state.lastAddr &&
+          !document.getElementById('addr').value)
+        document.getElementById('addr').value = state.lastAddr;
+    }
+    if (d.name || d.phone) toast('已帶入您上次的收件資料，可直接確認或修改');
+  }, function(){ /* 撈不到就算了 */ });
+}
 
 /* ---------- 已完成結帳 ---------- */
 function showPaid(){
@@ -497,7 +549,7 @@ function hidePaid(){
   toggleFormAfterNick(false);
 }
 function toggleFormAfterNick(hide){
-  var ids = ['f-name','f-phone','f-delivery','f-store','f-addr',
+  var ids = ['f-name','f-phone','f-delivery','f-store','f-addr','pickupBox',
              'f-pay','bankBox','f-payInfo','f-note','submitBtn'];
   ids.forEach(function(id){
     var el = document.getElementById(id);
@@ -506,12 +558,15 @@ function toggleFormAfterNick(hide){
   if (!hide){
     var s = document.getElementById('f-store');
     var a = document.getElementById('f-addr');
+    var pk = document.getElementById('pickupBox');
     s.classList.add('hide'); s.style.display = 'none';
     a.classList.add('hide'); a.style.display = 'none';
+    pk.classList.add('hide');
     var dv = document.querySelector('input[name=delivery]:checked');
     if (dv){
       if (dv.value === '交貨便'){ s.classList.remove('hide'); s.style.display = ''; }
-      else { a.classList.remove('hide'); a.style.display = ''; }
+      else if (dv.value === '宅配'){ a.classList.remove('hide'); a.style.display = ''; }
+      else if (dv.value === '自取'){ pk.classList.remove('hide'); }
     }
   }
 }
@@ -520,15 +575,25 @@ function toggleFormAfterNick(hide){
 bindRadios('deliveryBox', function(v){
   var s = document.getElementById('f-store');
   var a = document.getElementById('f-addr');
+  var pk = document.getElementById('pickupBox');
   hideSubmitAlert();
+  // 先全收起
+  s.classList.add('hide');  s.style.display = 'none';
+  a.classList.add('hide');  a.style.display = 'none';
+  pk.classList.add('hide');
+  document.getElementById('store').value = '';
+  document.getElementById('addr').value = '';
+
   if (v === '交貨便'){
     s.classList.remove('hide'); s.style.display = '';
-    a.classList.add('hide');    a.style.display = 'none';
-    document.getElementById('addr').value = '';
-  } else {
+    if (state.lastStore && !document.getElementById('store').value)
+      document.getElementById('store').value = state.lastStore;
+  } else if (v === '宅配'){
     a.classList.remove('hide'); a.style.display = '';
-    s.classList.add('hide');    s.style.display = 'none';
-    document.getElementById('store').value = '';
+    if (state.lastAddr && !document.getElementById('addr').value)
+      document.getElementById('addr').value = state.lastAddr;
+  } else if (v === '自取'){
+    pk.classList.remove('hide');
   }
   state.delivery = v;
   recalc();
@@ -715,9 +780,10 @@ function validate(){
     fail('f-delivery', '取貨方式');
   } else if (dv.value === '交貨便') {
     if (!document.getElementById('store').value.trim()) fail('f-store', '收件門市');
-  } else {
+  } else if (dv.value === '宅配') {
     if (!document.getElementById('addr').value.trim()) fail('f-addr', '收件地址');
   }
+  // 自取不需填門市或地址
 
   var pv = document.querySelector('input[name=pay]:checked');
   if (!pv) {
@@ -770,7 +836,7 @@ document.getElementById('submitBtn').addEventListener('click', function(){
     delivery: dv,
     address: dv === '交貨便'
       ? document.getElementById('store').value.trim()
-      : document.getElementById('addr').value.trim(),
+      : (dv === '宅配' ? document.getElementById('addr').value.trim() : ''),
     payMethod: pv,
     payInfo: document.getElementById('payInfo').value.trim(),
     merge: c.merge,
