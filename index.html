@@ -352,7 +352,7 @@
 
 <script>
 /* ============ 設定區 ============ */
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbyolsJly-5a_BbTuE2J2CcstLhO3QEJzZahMXXpP_4QUKuPxTncyOuYxTnCKQxR28_G/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbxTql_3TX3Aved915bJVyKqYoVfMDVynC1hkRmrNfGaXodILgs0itbq1On5j0U2LQZU/exec';
 var LINEPAY_URL = 'https://line.me/ti/p/taMX75HZDW';
 
 /* 運費規則 */
@@ -518,13 +518,13 @@ function fetchLastRecord(nick){
   state.lastStore = '';
   state.lastAddr = '';
   jsonp({ action: 'lastRecord', nickname: nick }, function(res){
-    if (!res.ok || !res.data) return;
+    if (!res.ok){ toast('查詢失敗：' + (res.msg || '未知')); return; }
+    if (!res.data){ toast('查無您的舊資料（首次訂購請直接填寫）'); return; }
     var d = res.data;
     if (d.name)  document.getElementById('name').value  = d.name;
     if (d.phone) document.getElementById('phone').value = d.phone;
     state.lastStore = d.store || '';
     state.lastAddr  = d.address || '';
-    // 若已選好取貨方式，立即帶入對應欄位
     var dv = document.querySelector('input[name=delivery]:checked');
     if (dv){
       if (dv.value === '交貨便' && state.lastStore &&
@@ -534,8 +534,8 @@ function fetchLastRecord(nick){
           !document.getElementById('addr').value)
         document.getElementById('addr').value = state.lastAddr;
     }
-    if (d.name || d.phone) toast('已帶入您上次的收件資料，可直接確認或修改');
-  }, function(){ /* 撈不到就算了 */ });
+    toast('已帶入您上次的收件資料，可直接確認或修改');
+  }, function(){ toast('連線逾時，未帶入舊資料'); });
 }
 
 /* ---------- 已完成結帳 ---------- */
