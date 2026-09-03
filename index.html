@@ -230,6 +230,28 @@
   .pickup-sub{font-size:13px;color:#6a9a84;line-height:1.8;font-weight:400;}
   .pickup-sub b{color:var(--ok);font-weight:600;}
 
+  /* 登入後四碼大輸入框 */
+  .last4-input{
+    text-align:center;letter-spacing:12px;font-size:24px;font-weight:600;
+    padding-left:12px;
+  }
+
+  /* 建檔頁 */
+  .reg-head{text-align:center;margin-bottom:22px;}
+  .reg-icon{font-size:38px;line-height:1;margin-bottom:8px;}
+  .reg-title{font-size:17px;font-weight:700;color:var(--ink);letter-spacing:1px;margin-bottom:6px;}
+  .reg-sub{font-size:12.5px;color:var(--muted);line-height:1.7;}
+
+  /* 登入後歡迎列 */
+  .welcome-bar{
+    background:linear-gradient(160deg,var(--accent-soft),#fbe6da);
+    border-radius:var(--r-sm);
+    padding:12px 16px;margin-bottom:22px;
+    font-size:13.5px;color:var(--accent-deep);font-weight:600;
+    letter-spacing:.5px;
+  }
+  .welcome-bar b{font-weight:700;}
+
   .hide{display:none;}
 
   .btn{
@@ -298,39 +320,23 @@
 
   <div class="head">
     <h1>豆媽選品｜結帳付款回報單</h1>
-    <p>選擇團別與姓名確認金額，填寫並完成匯款後送出 🙏</p>
+    <p id="headSub">請選擇團別並輸入電話後四碼登入查詢 🙏</p>
   </div>
 
   <div id="loading" class="card loading">載入中…</div>
 
-  <div id="formCard" class="card hide">
-
-    <div class="field" id="f-group">
+  <!-- ① 登入頁 -->
+  <div id="loginCard" class="card hide">
+    <div class="field" id="lf-group">
       <label>團別 - 品項<span class="req">*</span></label>
       <select id="group"><option value="">請選擇</option></select>
       <div class="err-msg">請選擇團別</div>
     </div>
 
-    <div class="field" id="f-nick">
+    <div class="field" id="lf-nick">
       <label>LINE 顯示名稱<span class="req">*</span></label>
       <select id="nickname" disabled><option value="">請先選擇團別</option></select>
-      <div class="hint">找不到自己的名字？選最下方「其他」手動輸入</div>
       <div class="err-msg">請選擇您的暱稱</div>
-    </div>
-
-    <div class="field hide" id="f-nickOther">
-      <label>請輸入 LINE 暱稱<span class="req">*</span></label>
-      <input type="text" id="nicknameOther" placeholder="您在群組顯示的名字">
-      <div class="err-msg">請輸入暱稱</div>
-    </div>
-
-    <!-- 身分驗證：老客需輸入電話後四碼 -->
-    <div class="verify-box hide" id="verifyBox">
-      <div class="verify-title">🔒 身分驗證</div>
-      <div class="verify-sub">為保護您的個資，請輸入您<b>電話號碼後四碼</b>確認身分</div>
-      <input type="tel" id="verifyInput" maxlength="4" inputmode="numeric" placeholder="後四碼">
-      <button type="button" class="verify-btn" id="verifyBtn">確認</button>
-      <div class="verify-msg" id="verifyMsg"></div>
     </div>
 
     <!-- 已完成結帳提示 -->
@@ -339,6 +345,51 @@
       <div class="paid-title">此團已完成結帳</div>
       <div class="paid-sub">款項已核對成功，感謝您的訂購！</div>
     </div>
+
+    <div class="field hide" id="lf-last4">
+      <label>電話後四碼<span class="req">*</span></label>
+      <input type="tel" id="loginLast4" maxlength="4" inputmode="numeric" placeholder="＿＿＿＿" class="last4-input">
+      <div class="hint">輸入您登記電話號碼的後四碼確認身分</div>
+      <div class="err-msg" id="loginMsg">後四碼不正確，請再確認</div>
+    </div>
+
+    <button class="btn hide" id="loginBtn">登　入</button>
+  </div>
+
+  <!-- ② 建檔頁（新朋友首次） -->
+  <div id="registerCard" class="card hide">
+    <div class="reg-head">
+      <div class="reg-icon">🌱</div>
+      <div class="reg-title">初次見面，先建個檔案吧！</div>
+      <div class="reg-sub">填寫後系統會記住您，下次用電話後四碼即可快速登入</div>
+    </div>
+
+    <div class="field">
+      <label>您的社群暱稱</label>
+      <input type="text" id="regNick" disabled>
+    </div>
+
+    <div class="field" id="rf-name">
+      <label>姓名<span class="req">*</span></label>
+      <input type="text" id="regName" placeholder="真實姓名">
+      <div class="err-msg">請填寫姓名</div>
+    </div>
+
+    <div class="field" id="rf-phone">
+      <label>電話<span class="req">*</span></label>
+      <input type="tel" id="regPhone" placeholder="09xxxxxxxx" inputmode="numeric">
+      <div class="err-msg">請填寫正確手機號碼（09開頭共10碼）</div>
+    </div>
+
+    <button class="btn" id="regBtn">建檔並開始</button>
+    <button class="btn btn-ghost" id="regBackBtn">返回</button>
+    <div class="submit-alert" id="regAlert">⚠️ 請確認姓名與電話填寫正確</div>
+  </div>
+
+  <!-- ③ 付款回報表單 -->
+  <div id="formCard" class="card hide">
+
+    <div class="welcome-bar" id="welcomeBar"></div>
 
     <div class="field" id="f-name">
       <label>收件人姓名<span class="req">*</span></label>
@@ -443,11 +494,10 @@
 
 </div>
 
-<div class="toast" id="toast"></div>
 
 <script>
 /* ============ 設定區 ============ */
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbwvddVcL9u2Ib3lHK2Mf85faL4BbaMNgbLpP7tiZLFFq7UJhiudDnNLXSJjaF-GUfrX/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbwPlIK6PNxK3BcuFYAaHOx5uD-vTIUfua5rOMrkOoZs9VCOrd36QsAk-b_TRr1Ccftw/exec';
 var LINEPAY_URL = 'https://line.me/ti/p/taMX75HZDW';
 
 /* 運費規則 */
@@ -496,40 +546,27 @@ jsonp({ action: 'init' }, function(res){
     sel.appendChild(o);
   });
   document.getElementById('loading').classList.add('hide');
-  document.getElementById('formCard').classList.remove('hide');
+  document.getElementById('loginCard').classList.remove('hide');
 }, function(){
   document.getElementById('loading').textContent = '載入失敗，請重新整理頁面';
 });
 
-/* ---------- 團別連動 ---------- */
+/* ---------- 登入頁：團別連動 ---------- */
 document.getElementById('group').addEventListener('change', function(){
   var g = this.value;
   curGroup = DATA.groups.filter(function(x){ return x.name === g; })[0] || null;
 
   var nick = document.getElementById('nickname');
   nick.innerHTML = '';
-  document.getElementById('f-nickOther').classList.add('hide');
-  document.getElementById('nicknameOther').value = '';
-  resetAmount();
   hidePaid();
-  hideSubmitAlert();
-
-  var hint = document.getElementById('shipRuleHint');
-  if (curGroup && curGroup.freeShip){
-    hint.textContent = '🎉 本團全面免運！';
-  } else {
-    hint.textContent = '交貨便滿 $1500 免運，未滿 +$60｜宅配滿 $2000 免運，未滿 +$100';
-  }
+  hideLast4();
+  clearLoginMsg();
 
   if (!g){
     nick.disabled = true;
     nick.innerHTML = '<option value="">請先選擇團別</option>';
-    document.getElementById('f-pay').classList.add('hide');
-    document.getElementById('f-payInfo').classList.add('hide');
-    document.getElementById('bankBox').classList.add('hide');
     return;
   }
-
   nick.disabled = false;
   nick.innerHTML = '<option value="">請選擇</option>';
   (DATA.members[g] || []).forEach(function(n){
@@ -537,10 +574,166 @@ document.getElementById('group').addEventListener('change', function(){
     o.value = n; o.textContent = n;
     nick.appendChild(o);
   });
-  var other = document.createElement('option');
-  other.value = '__other__'; other.textContent = '其他（手動輸入）';
-  nick.appendChild(other);
+});
 
+/* ---------- 登入頁：選暱稱 ---------- */
+document.getElementById('nickname').addEventListener('change', function(){
+  var v = this.value;
+  clearLoginMsg();
+  hideLast4();
+
+  if (!v){ hidePaid(); return; }
+
+  var group = curGroup ? curGroup.name : '';
+
+  // 已付清 → 顯示已完成結帳，不給登入
+  if (DATA.allPaid[group] && DATA.allPaid[group][v]){
+    showPaid();
+    document.getElementById('loginBtn').classList.add('hide');
+    return;
+  }
+  hidePaid();
+
+  state.nick = v;
+
+  // 查身分：已建檔→出現後四碼欄；未建檔→直接進建檔頁
+  jsonp({ action: 'lastRecord', nickname: v }, function(res){
+    if (!res.ok){ toast('查詢失敗，請重試'); return; }
+    if (res.status === 'need_register'){
+      goRegister(v);
+    } else {
+      // need_verify → 顯示後四碼輸入
+      showLast4();
+    }
+  }, function(){ toast('連線逾時，請重試'); });
+});
+
+function showLast4(){
+  document.getElementById('lf-last4').classList.remove('hide');
+  document.getElementById('loginBtn').classList.remove('hide');
+  document.getElementById('loginLast4').value = '';
+}
+function hideLast4(){
+  document.getElementById('lf-last4').classList.add('hide');
+  document.getElementById('loginBtn').classList.add('hide');
+  document.getElementById('lf-last4').classList.remove('bad');
+}
+function clearLoginMsg(){
+  document.getElementById('lf-last4').classList.remove('bad');
+}
+
+/* ---------- 登入頁：登入按鈕 ---------- */
+document.getElementById('loginBtn').addEventListener('click', function(){
+  var last4 = document.getElementById('loginLast4').value.replace(/\D/g, '');
+  var lf = document.getElementById('lf-last4');
+  if (last4.length !== 4){
+    lf.classList.add('bad');
+    document.getElementById('loginMsg').textContent = '請輸入 4 位數字';
+    return;
+  }
+  var btn = this;
+  btn.disabled = true; btn.textContent = '登入中…';
+
+  jsonp({ action: 'lastRecord', nickname: state.nick, last4: last4 }, function(res){
+    btn.disabled = false; btn.textContent = '登　入';
+    if (res.ok && res.status === 'ok'){
+      enterForm(res.data);
+    } else {
+      lf.classList.add('bad');
+      document.getElementById('loginMsg').textContent = '後四碼不正確，請再確認';
+    }
+  }, function(){
+    btn.disabled = false; btn.textContent = '登　入';
+    lf.classList.add('bad');
+    document.getElementById('loginMsg').textContent = '連線錯誤，請再試一次';
+  });
+});
+
+/* ---------- 建檔頁 ---------- */
+function goRegister(nick){
+  document.getElementById('loginCard').classList.add('hide');
+  document.getElementById('registerCard').classList.remove('hide');
+  document.getElementById('regNick').value = nick;
+  document.getElementById('regName').value = '';
+  document.getElementById('regPhone').value = '';
+  document.getElementById('regAlert').classList.remove('on');
+  document.getElementById('headSub').textContent = '初次使用，請先建立您的資料 🌱';
+  window.scrollTo(0,0);
+}
+
+document.getElementById('regBackBtn').addEventListener('click', function(){
+  document.getElementById('registerCard').classList.add('hide');
+  document.getElementById('loginCard').classList.remove('hide');
+  document.getElementById('headSub').textContent = '請選擇團別並輸入電話後四碼登入查詢 🙏';
+  hideLast4();
+  document.getElementById('nickname').value = '';
+  window.scrollTo(0,0);
+});
+
+document.getElementById('regBtn').addEventListener('click', function(){
+  var name = document.getElementById('regName').value.trim();
+  var phone = document.getElementById('regPhone').value.trim();
+  var okName = !!name;
+  var okPhone = /^09\d{8}$/.test(phone);
+  document.getElementById('rf-name').classList.toggle('bad', !okName);
+  document.getElementById('rf-phone').classList.toggle('bad', !okPhone);
+  if (!okName || !okPhone){
+    document.getElementById('regAlert').classList.add('on');
+    return;
+  }
+  document.getElementById('regAlert').classList.remove('on');
+
+  var btn = this;
+  btn.disabled = true; btn.textContent = '建檔中…';
+
+  var payload = { nickname: state.nick, name: name, phone: phone };
+  jsonp({ action: 'register', payload: JSON.stringify(payload) }, function(res){
+    btn.disabled = false; btn.textContent = '建檔並開始';
+    if (res.ok){
+      document.getElementById('registerCard').classList.add('hide');
+      enterForm(res.data);   // 建檔完直接進表單
+    } else {
+      document.getElementById('regAlert').textContent = '⚠️ ' + (res.msg || '建檔失敗，請重試');
+      document.getElementById('regAlert').classList.add('on');
+    }
+  }, function(){
+    btn.disabled = false; btn.textContent = '建檔並開始';
+    document.getElementById('regAlert').textContent = '⚠️ 連線錯誤，請再試一次';
+    document.getElementById('regAlert').classList.add('on');
+  });
+});
+
+/* ---------- 進入表單（登入或建檔成功後） ---------- */
+function enterForm(record){
+  var group = curGroup ? curGroup.name : '';
+
+  // 計算金額狀態
+  state.goods = (DATA.amounts[group] && DATA.amounts[group][state.nick]) || 0;
+  state.otherList = [];
+  state.otherTotal = 0;
+  Object.keys(DATA.amounts).forEach(function(gg){
+    if (gg === group) return;
+    var a = DATA.amounts[gg][state.nick];
+    if (a && a > 0){ state.otherList.push({ g: gg, a: a }); state.otherTotal += a; }
+  });
+
+  // 切畫面
+  document.getElementById('loginCard').classList.add('hide');
+  document.getElementById('registerCard').classList.add('hide');
+  document.getElementById('formCard').classList.remove('hide');
+  document.getElementById('headSub').textContent = '確認金額，填寫並完成匯款後送出 🙏';
+
+  // 歡迎列
+  var wb = document.getElementById('welcomeBar');
+  wb.innerHTML = '👋 <b>' + escapeHtml(state.nick) + '</b>　團別：' + escapeHtml(group);
+
+  // 免運提示
+  var hint = document.getElementById('shipRuleHint');
+  hint.textContent = (curGroup && curGroup.freeShip)
+    ? '🎉 本團全面免運！'
+    : '交貨便滿 $1500 免運，未滿 +$60｜宅配滿 $2000 免運，未滿 +$100';
+
+  // 付款方式按鈕
   var box = document.getElementById('payBox');
   box.innerHTML = '';
   var pays = curGroup ? curGroup.pays : ['匯款'];
@@ -560,193 +753,31 @@ document.getElementById('group').addEventListener('change', function(){
     box.querySelector('label').classList.add('on');
     onPayChange(pays[0]);
   }
-});
 
-/* ---------- 選暱稱 ---------- */
-document.getElementById('nickname').addEventListener('change', function(){
-  var v = this.value;
-  var fOther = document.getElementById('f-nickOther');
-  hideSubmitAlert();
-  hideVerify();
-
-  if (v === '__other__'){
-    fOther.classList.remove('hide');
-    hidePaid();
-    resetAmount();
-    setFormLocked(false);   // 手動輸入的新朋友直接填
-    return;
+  // 帶入收件資料
+  if (record){
+    if (record.name)  document.getElementById('name').value  = record.name;
+    if (record.phone) document.getElementById('phone').value = record.phone;
+    state.lastStore = record.store || '';
+    state.lastAddr  = record.address || '';
   }
-  fOther.classList.add('hide');
-  document.getElementById('nicknameOther').value = '';
 
-  if (!v){ hidePaid(); resetAmount(); setFormLocked(false); return; }
+  recalc();
+  window.scrollTo(0,0);
+}
 
-  var group = curGroup ? curGroup.name : '';
-
-  if (DATA.allPaid[group] && DATA.allPaid[group][v]){
-    showPaid();
-    return;
-  }
-  hidePaid();
-
-  // 清空前一位的收件資料
-  document.getElementById('name').value = '';
-  document.getElementById('phone').value = '';
-  document.getElementById('store').value = '';
-  document.getElementById('addr').value = '';
-
-  state.nick = v;
-  state.goods = (DATA.amounts[group] && DATA.amounts[group][v]) || 0;
-
-  state.otherList = [];
-  state.otherTotal = 0;
-  Object.keys(DATA.amounts).forEach(function(gg){
-    if (gg === group) return;
-    var a = DATA.amounts[gg][v];
-    if (a && a > 0){ state.otherList.push({ g: gg, a: a }); state.otherTotal += a; }
+function escapeHtml(s){
+  return String(s).replace(/[&<>"]/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
   });
-
-  // 先查身分：新客直接填，老客要驗證
-  checkIdentity(v);
-});
-
-/* ---------- 身分查詢 ---------- */
-function checkIdentity(nick){
-  setFormLocked(true);  // 先鎖住，等結果
-  jsonp({ action: 'lastRecord', nickname: nick }, function(res){
-    if (!res.ok){ setFormLocked(false); recalc(); return; }
-    if (res.status === 'new'){
-      // 沒有舊資料 → 新朋友，直接開放填寫
-      hideVerify();
-      setFormLocked(false);
-      recalc();
-    } else if (res.status === 'need_verify'){
-      // 老客 → 要求輸入電話後四碼
-      showVerify();
-    } else {
-      setFormLocked(false);
-      recalc();
-    }
-  }, function(){ setFormLocked(false); recalc(); });
 }
 
-/* ---------- 驗證框 ---------- */
-function showVerify(){
-  document.getElementById('verifyBox').classList.remove('hide');
-  document.getElementById('verifyInput').value = '';
-  document.getElementById('verifyMsg').textContent = '';
-  document.getElementById('verifyMsg').className = 'verify-msg';
-}
-function hideVerify(){
-  document.getElementById('verifyBox').classList.add('hide');
-}
-
-document.getElementById('verifyBtn').addEventListener('click', function(){
-  var last4 = document.getElementById('verifyInput').value.replace(/\D/g, '');
-  var msg = document.getElementById('verifyMsg');
-  if (last4.length !== 4){
-    msg.textContent = '請輸入 4 位數字';
-    msg.className = 'verify-msg err';
-    return;
-  }
-  var btn = this;
-  btn.disabled = true; btn.textContent = '驗證中…';
-
-  jsonp({ action: 'lastRecord', nickname: state.nick, last4: last4 }, function(res){
-    btn.disabled = false; btn.textContent = '確認';
-    if (res.ok && res.status === 'ok'){
-      msg.textContent = '✓ 驗證成功';
-      msg.className = 'verify-msg ok';
-      applyRecord(res.data);
-      setTimeout(function(){
-        hideVerify();
-        setFormLocked(false);
-        recalc();
-      }, 500);
-    } else {
-      msg.textContent = '後四碼不正確，請再確認';
-      msg.className = 'verify-msg err';
-    }
-  }, function(){
-    btn.disabled = false; btn.textContent = '確認';
-    msg.textContent = '連線錯誤，請再試一次';
-    msg.className = 'verify-msg err';
-  });
-});
-
-/* 驗證通過後帶入資料 */
-function applyRecord(d){
-  if (!d) return;
-  if (d.name)  document.getElementById('name').value  = d.name;
-  if (d.phone) document.getElementById('phone').value = d.phone;
-  state.lastStore = d.store || '';
-  state.lastAddr  = d.address || '';
-  var dv = document.querySelector('input[name=delivery]:checked');
-  if (dv){
-    if (dv.value === '交貨便' && state.lastStore) document.getElementById('store').value = state.lastStore;
-    if (dv.value === '宅配' && state.lastAddr)   document.getElementById('addr').value  = state.lastAddr;
-  }
-  toast('已帶入您的收件資料，可確認或修改');
-}
-
-/* 鎖住/開放姓名以下欄位（未驗證前不給填、也不顯示個資欄） */
-function setFormLocked(lock){
-  var ids = ['f-name','f-phone','f-delivery','f-store','f-addr','pickupBox',
-             'amountBox','f-pay','bankBox','f-payInfo','f-note','submitBtn'];
-  ids.forEach(function(id){
-    var el = document.getElementById(id);
-    if (el) el.style.display = lock ? 'none' : '';
-  });
-  if (!lock){
-    // 開放時，門市/地址仍照取貨方式決定
-    var s = document.getElementById('f-store');
-    var a = document.getElementById('f-addr');
-    var pk = document.getElementById('pickupBox');
-    s.style.display = 'none'; a.style.display = 'none'; pk.style.display = 'none';
-    s.classList.add('hide'); a.classList.add('hide'); pk.classList.add('hide');
-    var dv = document.querySelector('input[name=delivery]:checked');
-    if (dv){
-      if (dv.value === '交貨便'){ s.classList.remove('hide'); s.style.display=''; }
-      else if (dv.value === '宅配'){ a.classList.remove('hide'); a.style.display=''; }
-      else if (dv.value === '自取'){ pk.classList.remove('hide'); }
-    }
-    // amountBox 由 recalc 決定要不要顯示
-    document.getElementById('amountBox').style.display = '';
-  }
-}
-
-
-/* ---------- 已完成結帳 ---------- */
+/* ---------- 已完成結帳（顯示在登入頁） ---------- */
 function showPaid(){
   document.getElementById('paidBox').classList.remove('hide');
-  document.getElementById('amountBox').classList.add('hide');
-  toggleFormAfterNick(true);
 }
 function hidePaid(){
   document.getElementById('paidBox').classList.add('hide');
-  toggleFormAfterNick(false);
-}
-function toggleFormAfterNick(hide){
-  var ids = ['f-name','f-phone','f-delivery','f-store','f-addr','pickupBox',
-             'f-pay','bankBox','f-payInfo','f-note','submitBtn'];
-  ids.forEach(function(id){
-    var el = document.getElementById(id);
-    if (el) el.style.display = hide ? 'none' : '';
-  });
-  if (!hide){
-    var s = document.getElementById('f-store');
-    var a = document.getElementById('f-addr');
-    var pk = document.getElementById('pickupBox');
-    s.classList.add('hide'); s.style.display = 'none';
-    a.classList.add('hide'); a.style.display = 'none';
-    pk.classList.add('hide');
-    var dv = document.querySelector('input[name=delivery]:checked');
-    if (dv){
-      if (dv.value === '交貨便'){ s.classList.remove('hide'); s.style.display = ''; }
-      else if (dv.value === '宅配'){ a.classList.remove('hide'); a.style.display = ''; }
-      else if (dv.value === '自取'){ pk.classList.remove('hide'); }
-    }
-  }
 }
 
 /* ---------- 取貨方式 ---------- */
@@ -926,25 +957,16 @@ function validate(){
   var problems = [];  // 收集缺漏項目，最後給明確提示
 
   // 先清掉所有紅框
-  ['f-group','f-nick','f-nickOther','f-name','f-phone',
-   'f-delivery','f-store','f-addr','f-pay','f-payInfo'].forEach(function(id){
-    var el = document.getElementById(id);
-    if (el) el.classList.remove('bad');
-  });
+  ['f-name','f-phone','f-delivery','f-store','f-addr','f-pay','f-payInfo']
+    .forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) el.classList.remove('bad');
+    });
 
   function fail(id, label){
     var el = document.getElementById(id);
     if (el) el.classList.add('bad');
     problems.push(label);
-  }
-
-  if (!document.getElementById('group').value) fail('f-group', '團別');
-
-  var nick = document.getElementById('nickname').value;
-  if (!nick) {
-    fail('f-nick', 'LINE 顯示名稱');
-  } else if (nick === '__other__' && !document.getElementById('nicknameOther').value.trim()) {
-    fail('f-nickOther', 'LINE 暱稱');
   }
 
   if (!document.getElementById('name').value.trim()) fail('f-name', '收件人姓名');
@@ -999,15 +1021,14 @@ document.getElementById('submitBtn').addEventListener('click', function(){
   btn.disabled = true;
   btn.textContent = '送出中…';
 
-  var nick = document.getElementById('nickname').value;
-  if (nick === '__other__') nick = document.getElementById('nicknameOther').value.trim();
+  var nick = state.nick;
 
   var dv = document.querySelector('input[name=delivery]:checked').value;
   var pv = document.querySelector('input[name=pay]:checked').value;
   var c = state.calc || { merge:false, goods:0, shipping:0, total:0 };
 
   var payload = {
-    group: document.getElementById('group').value,
+    group: curGroup ? curGroup.name : document.getElementById('group').value,
     nickname: nick,
     name: document.getElementById('name').value.trim(),
     phone: document.getElementById('phone').value.trim(),
