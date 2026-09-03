@@ -5,206 +5,292 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>豆媽選品｜結帳付款回報單</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700;900&display=swap');
+
   :root{
-    --bg:#faf7f2;
+    --bg:#f6f1ea;
+    --bg2:#fbf8f3;
     --card:#ffffff;
-    --ink:#2f2a26;
-    --muted:#8a8178;
-    --line:#e8e1d8;
-    --accent:#c46b4a;
-    --accent-soft:#fdf1ec;
-    --ok:#4a8c6f;
-    --err:#c0392b;
+    --ink:#3a3330;
+    --ink-soft:#6b625b;
+    --muted:#a89e94;
+    --line:#efe7dc;
+    --accent:#c47a5a;
+    --accent-deep:#b0673f;
+    --accent-soft:#fbeee6;
+    --ok:#5b9a7d;
+    --ok-soft:#e9f5ef;
+    --err:#d17a6e;
     --linepay:#06C755;
-    --amount:#b8532f;
+    --amount:#b76a44;
+    --shadow:0 4px 20px rgba(150,120,90,.08);
+    --shadow-soft:0 2px 10px rgba(150,120,90,.06);
+    --r:18px;
+    --r-sm:13px;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   body{
-    margin:0;padding:16px;
-    background:var(--bg);
+    margin:0;padding:20px 16px 40px;
+    background:
+      radial-gradient(1200px 500px at 50% -10%, #fdf6ee 0%, transparent 70%),
+      var(--bg);
     color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
-    font-size:16px;line-height:1.6;
+    font-family:"Noto Sans TC",-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei",sans-serif;
+    font-size:16px;line-height:1.65;
+    font-weight:400;
+    -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:520px;margin:0 auto;}
+  .wrap{max-width:480px;margin:0 auto;}
 
-  .head{text-align:center;padding:8px 0 20px;}
-  .head h1{margin:0 0 6px;font-size:22px;letter-spacing:1px;}
-  .head p{margin:0;color:var(--muted);font-size:14px;}
+  .head{text-align:center;padding:10px 0 24px;}
+  .head h1{
+    margin:0 0 8px;font-size:23px;font-weight:700;
+    letter-spacing:2px;color:var(--ink);
+  }
+  .head p{margin:0;color:var(--muted);font-size:13.5px;font-weight:400;letter-spacing:.5px;}
 
   .card{
     background:var(--card);
-    border:1px solid var(--line);
-    border-radius:14px;
-    padding:20px 18px;
+    border:none;
+    border-radius:var(--r);
+    padding:24px 20px;
+    box-shadow:var(--shadow);
   }
 
-  .field{margin-bottom:18px;}
+  .field{margin-bottom:20px;}
   .field:last-child{margin-bottom:0;}
-  label{display:block;font-size:14px;font-weight:600;margin-bottom:7px;}
+  label{
+    display:block;font-size:13.5px;font-weight:600;
+    margin-bottom:9px;letter-spacing:.5px;color:var(--ink-soft);
+  }
   .req{color:var(--accent);margin-left:3px;}
-  .hint{font-size:12px;color:var(--muted);font-weight:400;margin-top:5px;line-height:1.7;}
+  .hint{font-size:12px;color:var(--muted);font-weight:400;margin-top:7px;line-height:1.7;}
 
   input[type=text],input[type=tel],select,textarea{
-    width:100%;padding:11px 12px;
-    border:1px solid var(--line);border-radius:9px;
+    width:100%;padding:13px 15px;
+    border:1.5px solid var(--line);border-radius:var(--r-sm);
     font-size:16px;font-family:inherit;color:var(--ink);
-    background:#fff;outline:none;transition:border-color .15s;
+    background:var(--bg2);
+    outline:none;transition:all .2s ease;
+    font-weight:400;
   }
-  input:focus,select:focus,textarea:focus{border-color:var(--accent);}
-  textarea{resize:vertical;min-height:64px;}
-  select:disabled,input:disabled{background:#f5f2ee;color:var(--muted);}
+  input::placeholder,textarea::placeholder{color:var(--muted);font-weight:300;}
+  input:focus,select:focus,textarea:focus{
+    border-color:var(--accent);
+    background:#fff;
+    box-shadow:0 0 0 4px rgba(196,122,90,.08);
+  }
+  textarea{resize:vertical;min-height:70px;line-height:1.6;}
+  select:disabled,input:disabled{background:#f2ede6;color:var(--muted);border-color:var(--line);}
+  select{
+    appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23a89e94' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right 15px center;
+    padding-right:38px;
+  }
+
+  /* 身分驗證 */
+  .verify-box{
+    background:linear-gradient(160deg,#fdf6ef,#fbeee4);
+    border:none;
+    border-radius:var(--r);
+    padding:20px;margin-bottom:20px;
+    box-shadow:var(--shadow-soft);
+  }
+  .verify-title{font-size:15px;font-weight:700;color:var(--accent-deep);margin-bottom:7px;letter-spacing:1px;}
+  .verify-sub{font-size:13px;color:var(--ink-soft);line-height:1.7;margin-bottom:14px;}
+  .verify-sub b{color:var(--accent-deep);font-weight:600;}
+  .verify-box input{
+    width:100%;padding:13px;
+    border:1.5px solid #eeddce;border-radius:var(--r-sm);
+    font-size:22px;letter-spacing:10px;text-align:center;
+    font-family:inherit;font-weight:600;background:#fff;color:var(--ink);
+  }
+  .verify-box input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(196,122,90,.1);}
+  .verify-btn{
+    width:100%;margin-top:12px;padding:13px;
+    background:var(--accent);color:#fff;border:none;border-radius:var(--r-sm);
+    font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;
+    letter-spacing:2px;transition:all .2s;
+    box-shadow:0 3px 12px rgba(196,122,90,.25);
+  }
+  .verify-btn:active{transform:scale(.98);}
+  .verify-msg{margin-top:12px;font-size:13px;text-align:center;font-weight:600;min-height:18px;letter-spacing:.5px;}
+  .verify-msg.err{color:var(--err);}
+  .verify-msg.ok{color:var(--ok);}
 
   /* 已完成結帳 */
   .paid-box{
-    background:linear-gradient(135deg,#eafaf1,#dff5e8);
-    border:1px solid #b6e2c8;
-    border-radius:12px;
-    padding:22px 18px;text-align:center;
-    margin-bottom:18px;
+    background:linear-gradient(160deg,var(--ok-soft),#e0f2e8);
+    border:none;
+    border-radius:var(--r);
+    padding:26px 20px;text-align:center;
+    margin-bottom:20px;
+    box-shadow:var(--shadow-soft);
   }
-  .paid-box .paid-tick{font-size:36px;line-height:1;margin-bottom:8px;}
-  .paid-box .paid-title{font-size:18px;font-weight:800;color:var(--ok);}
-  .paid-box .paid-sub{font-size:13px;color:#5a8a70;margin-top:5px;line-height:1.6;}
+  .paid-box .paid-tick{font-size:40px;line-height:1;margin-bottom:10px;}
+  .paid-box .paid-title{font-size:18px;font-weight:700;color:var(--ok);letter-spacing:1px;}
+  .paid-box .paid-sub{font-size:13px;color:#6a9a84;margin-top:6px;line-height:1.7;}
 
+  /* 金額明細 */
   .amount-box{
-    background:linear-gradient(135deg,#fff4ee,#fdeae1);
-    border:1px solid #f0d0c0;
-    border-radius:12px;
-    padding:16px 18px;
-    margin-bottom:18px;
+    background:linear-gradient(160deg,#fdf3ec,#fbe9dd);
+    border:none;
+    border-radius:var(--r);
+    padding:20px;
+    margin-bottom:20px;
+    box-shadow:var(--shadow-soft);
   }
   .amount-row{
     display:flex;justify-content:space-between;
-    font-size:14px;padding:2px 0;color:#7a5a48;
+    font-size:14px;padding:3px 0;color:var(--ink-soft);font-weight:400;
   }
   .amount-row .free{color:var(--ok);font-weight:600;}
   .amount-total{
     display:flex;justify-content:space-between;align-items:baseline;
-    margin-top:10px;padding-top:10px;border-top:1px dashed #eab89f;
+    margin-top:12px;padding-top:14px;border-top:1.5px dashed #e6c9b3;
   }
-  .amount-total .cap{font-size:13px;color:var(--muted);}
+  .amount-total .cap{font-size:13px;color:var(--muted);letter-spacing:1px;}
   .amount-total .big{
-    font-size:28px;font-weight:800;color:var(--amount);letter-spacing:.5px;
+    font-size:30px;font-weight:900;color:var(--amount);letter-spacing:.5px;
   }
-  .amount-total .big small{font-size:15px;font-weight:600;margin-right:2px;}
-  .ship-tip{margin-top:8px;font-size:12px;color:#a05a3a;line-height:1.6;}
+  .amount-total .big small{font-size:16px;font-weight:600;margin-right:2px;}
+  .ship-tip{margin-top:10px;font-size:12px;color:var(--accent-deep);line-height:1.7;font-weight:400;}
   .unpaid{
-    margin-top:10px;padding-top:10px;
-    border-top:1px dashed #eab89f;
-    font-size:13px;color:#a05a3a;line-height:1.7;
+    margin-top:12px;padding-top:12px;
+    border-top:1.5px dashed #e6c9b3;
+    font-size:13px;color:var(--accent-deep);line-height:1.8;
   }
   .unpaid b{font-weight:700;}
 
   .merge-box{
-    display:flex;gap:10px;align-items:flex-start;
-    background:#fff;border:1px solid #f0d0c0;border-radius:10px;
-    padding:12px 14px;margin-top:10px;cursor:pointer;
+    display:flex;gap:11px;align-items:flex-start;
+    background:#fff;border:1.5px solid #f2ddcd;border-radius:var(--r-sm);
+    padding:14px 15px;margin-top:12px;cursor:pointer;
+    transition:border-color .2s;
   }
-  .merge-box input{margin-top:3px;width:18px;height:18px;flex-shrink:0;accent-color:var(--accent);}
-  .merge-box .txt{font-size:13px;line-height:1.6;}
-  .merge-box .txt b{color:var(--accent);}
-  .merge-box .txt .sub{color:var(--muted);font-size:12px;}
+  .merge-box:active{border-color:var(--accent);}
+  .merge-box input{margin-top:3px;width:19px;height:19px;flex-shrink:0;accent-color:var(--accent);}
+  .merge-box .txt{font-size:13px;line-height:1.7;}
+  .merge-box .txt b{color:var(--accent-deep);font-weight:600;}
+  .merge-box .txt .sub{color:var(--muted);font-size:12px;font-weight:300;}
 
+  /* 選項按鈕 */
   .radios{display:flex;gap:10px;}
   .radios label{
     flex:1;margin:0;
-    border:1px solid var(--line);border-radius:9px;
-    padding:11px 6px;text-align:center;cursor:pointer;
-    font-weight:500;font-size:14px;transition:all .15s;
+    border:1.5px solid var(--line);border-radius:var(--r-sm);
+    padding:13px 6px;text-align:center;cursor:pointer;
+    font-weight:500;font-size:14px;transition:all .2s ease;
+    color:var(--ink-soft);background:var(--bg2);letter-spacing:.5px;
   }
   .radios input{position:absolute;opacity:0;pointer-events:none;}
   .radios label.on{
     border-color:var(--accent);background:var(--accent-soft);
-    color:var(--accent);font-weight:600;
+    color:var(--accent-deep);font-weight:700;
+    box-shadow:0 2px 8px rgba(196,122,90,.14);
   }
 
   .linepay-btn{
-    display:inline-block;margin-top:8px;padding:9px 18px;
-    background:var(--linepay);color:#fff;border-radius:7px;
-    font-size:13px;font-weight:600;text-decoration:none;
+    display:inline-block;margin-top:10px;padding:10px 20px;
+    background:var(--linepay);color:#fff;border-radius:var(--r-sm);
+    font-size:13px;font-weight:600;text-decoration:none;letter-spacing:.5px;
+    box-shadow:0 3px 10px rgba(6,199,85,.22);
   }
-  .linepay-btn:active{opacity:.85;}
+  .linepay-btn:active{transform:scale(.98);}
 
   .bank-box{
-    background:var(--accent-soft);border:1px solid #f0d9cf;
-    border-radius:10px;padding:14px 16px;margin:-6px 0 18px;
+    background:var(--accent-soft);border:none;
+    border-radius:var(--r-sm);padding:16px 18px;margin:-8px 0 20px;
+    box-shadow:var(--shadow-soft);
   }
-  .bank-title{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px;}
-  .bank-row{display:flex;justify-content:space-between;gap:12px;font-size:14px;padding:3px 0;}
-  .bank-row .k{color:var(--muted);flex-shrink:0;}
-  .bank-row .v{font-weight:600;text-align:right;word-break:break-all;}
+  .bank-title{font-size:13px;font-weight:700;color:var(--accent-deep);margin-bottom:12px;letter-spacing:1px;}
+  .bank-row{display:flex;justify-content:space-between;gap:12px;font-size:14px;padding:4px 0;}
+  .bank-row .k{color:var(--muted);flex-shrink:0;font-weight:400;}
+  .bank-row .v{font-weight:600;text-align:right;word-break:break-all;color:var(--ink);}
   .bank-copy{
-    width:100%;margin-top:10px;padding:8px;
-    background:#fff;border:1px solid var(--accent);
-    color:var(--accent);border-radius:7px;
-    font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;
+    width:100%;margin-top:12px;padding:10px;
+    background:#fff;border:1.5px solid var(--accent);
+    color:var(--accent-deep);border-radius:var(--r-sm);
+    font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;letter-spacing:1px;
+    transition:all .2s;
   }
-  .bank-copy:active{opacity:.8;}
+  .bank-copy:active{transform:scale(.99);background:var(--accent-soft);}
 
+  /* 自取 */
   .pickup-box{
-    background:linear-gradient(135deg,#eafaf1,#dff5e8);
-    border:1px solid #b6e2c8;
-    border-radius:10px;
-    padding:14px 16px;margin-bottom:18px;
+    background:linear-gradient(160deg,var(--ok-soft),#e2f3ea);
+    border:none;
+    border-radius:var(--r);
+    padding:18px 20px;margin-bottom:20px;
+    box-shadow:var(--shadow-soft);
   }
-  .pickup-title{font-size:14px;font-weight:700;color:var(--ok);margin-bottom:6px;}
-  .pickup-sub{font-size:13px;color:#5a8a70;line-height:1.7;}
-  .pickup-sub b{color:var(--ok);}
+  .pickup-title{font-size:14.5px;font-weight:700;color:var(--ok);margin-bottom:7px;letter-spacing:.5px;}
+  .pickup-sub{font-size:13px;color:#6a9a84;line-height:1.8;font-weight:400;}
+  .pickup-sub b{color:var(--ok);font-weight:600;}
 
   .hide{display:none;}
 
   .btn{
-    width:100%;padding:14px;
-    border:none;border-radius:10px;
-    background:var(--accent);color:#fff;
-    font-size:17px;font-weight:600;font-family:inherit;
-    cursor:pointer;margin-top:22px;
+    width:100%;padding:16px;
+    border:none;border-radius:var(--r-sm);
+    background:linear-gradient(160deg,var(--accent),var(--accent-deep));
+    color:#fff;
+    font-size:16px;font-weight:600;font-family:inherit;
+    cursor:pointer;margin-top:26px;letter-spacing:3px;
+    box-shadow:0 6px 18px rgba(176,103,63,.28);
+    transition:all .2s;
   }
-  .btn:active{opacity:.85;}
-  .btn:disabled{background:#ccc;cursor:default;}
+  .btn:active{transform:translateY(1px);box-shadow:0 3px 10px rgba(176,103,63,.24);}
+  .btn:disabled{background:#d8cdc2;box-shadow:none;cursor:default;}
 
-  .err-msg{color:var(--err);font-size:13px;margin-top:5px;display:none;}
-  .field.bad input,.field.bad select,.field.bad textarea{border-color:var(--err);}
+  .err-msg{color:var(--err);font-size:12.5px;margin-top:7px;display:none;font-weight:500;}
+  .field.bad input,.field.bad select,.field.bad textarea{border-color:var(--err);background:#fdf3f1;}
   .field.bad .err-msg{display:block;}
 
-  /* 送出失敗總提示 */
   .submit-alert{
-    display:none;
-    margin-top:14px;
-    background:#fdecea;
-    border:1px solid #f5c6c0;
-    color:var(--err);
-    border-radius:9px;
-    padding:11px 14px;
-    font-size:14px;font-weight:600;
-    text-align:center;
+    display:none;margin-top:16px;
+    background:#fdf0ed;border:none;
+    color:var(--err);border-radius:var(--r-sm);
+    padding:13px 16px;font-size:13.5px;font-weight:600;
+    text-align:center;letter-spacing:.5px;
+    box-shadow:var(--shadow-soft);
   }
   .submit-alert.on{display:block;}
 
   .done{text-align:center;}
   .done .tick{
-    width:52px;height:52px;border-radius:50%;
-    background:var(--ok);color:#fff;
-    font-size:28px;line-height:52px;margin:0 auto 14px;
+    width:58px;height:58px;border-radius:50%;
+    background:linear-gradient(160deg,var(--ok),#4a8a6d);color:#fff;
+    font-size:30px;line-height:58px;margin:0 auto 16px;
+    box-shadow:0 6px 16px rgba(91,154,125,.3);
   }
-  .done h2{margin:0 0 6px;font-size:19px;}
-  .done .sub{color:var(--muted);font-size:14px;margin-bottom:18px;}
+  .done h2{margin:0 0 8px;font-size:20px;font-weight:700;letter-spacing:1px;}
+  .done .sub{color:var(--muted);font-size:13.5px;margin-bottom:20px;line-height:1.7;}
   .copybox{
-    background:var(--bg);border:1px dashed var(--line);
-    border-radius:10px;padding:14px;text-align:left;
+    background:var(--bg2);border:1.5px dashed var(--line);
+    border-radius:var(--r-sm);padding:16px;text-align:left;
     font-size:14px;white-space:pre-wrap;word-break:break-all;
-    line-height:1.75;margin-bottom:14px;
+    line-height:1.85;margin-bottom:16px;color:var(--ink-soft);
   }
-  .btn-ghost{background:#fff;color:var(--accent);border:1.5px solid var(--accent);margin-top:8px;}
+  .btn-ghost{
+    background:#fff;color:var(--accent-deep);
+    border:1.5px solid var(--accent);margin-top:10px;
+    box-shadow:none;
+  }
+  .btn-ghost:active{background:var(--accent-soft);}
+
   .toast{
-    position:fixed;left:50%;bottom:28px;transform:translateX(-50%);
-    background:rgba(47,42,38,.94);color:#fff;
-    padding:10px 20px;border-radius:20px;font-size:14px;
-    opacity:0;pointer-events:none;transition:opacity .2s;z-index:99;
+    position:fixed;left:50%;bottom:30px;transform:translateX(-50%);
+    background:rgba(58,51,48,.95);color:#fff;
+    padding:12px 24px;border-radius:24px;font-size:13.5px;
+    opacity:0;pointer-events:none;transition:opacity .25s;z-index:99;
+    letter-spacing:.5px;box-shadow:0 6px 20px rgba(0,0,0,.18);
+    max-width:88%;text-align:center;
   }
   .toast.on{opacity:1;}
-  .loading{text-align:center;padding:40px 0;color:var(--muted);}
+  .loading{text-align:center;padding:44px 0;color:var(--muted);font-weight:300;letter-spacing:1px;}
 </style>
 </head>
 <body>
@@ -236,6 +322,15 @@
       <label>請輸入 LINE 暱稱<span class="req">*</span></label>
       <input type="text" id="nicknameOther" placeholder="您在群組顯示的名字">
       <div class="err-msg">請輸入暱稱</div>
+    </div>
+
+    <!-- 身分驗證：老客需輸入電話後四碼 -->
+    <div class="verify-box hide" id="verifyBox">
+      <div class="verify-title">🔒 身分驗證</div>
+      <div class="verify-sub">為保護您的個資，請輸入您<b>電話號碼後四碼</b>確認身分</div>
+      <input type="tel" id="verifyInput" maxlength="4" inputmode="numeric" placeholder="後四碼">
+      <button type="button" class="verify-btn" id="verifyBtn">確認</button>
+      <div class="verify-msg" id="verifyMsg"></div>
     </div>
 
     <!-- 已完成結帳提示 -->
@@ -352,7 +447,7 @@
 
 <script>
 /* ============ 設定區 ============ */
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbxTql_3TX3Aved915bJVyKqYoVfMDVynC1hkRmrNfGaXodILgs0itbq1On5j0U2LQZU/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbwvddVcL9u2Ib3lHK2Mf85faL4BbaMNgbLpP7tiZLFFq7UJhiudDnNLXSJjaF-GUfrX/exec';
 var LINEPAY_URL = 'https://line.me/ti/p/taMX75HZDW';
 
 /* 運費規則 */
@@ -472,17 +567,19 @@ document.getElementById('nickname').addEventListener('change', function(){
   var v = this.value;
   var fOther = document.getElementById('f-nickOther');
   hideSubmitAlert();
+  hideVerify();
 
   if (v === '__other__'){
     fOther.classList.remove('hide');
     hidePaid();
     resetAmount();
+    setFormLocked(false);   // 手動輸入的新朋友直接填
     return;
   }
   fOther.classList.add('hide');
   document.getElementById('nicknameOther').value = '';
 
-  if (!v){ hidePaid(); resetAmount(); return; }
+  if (!v){ hidePaid(); resetAmount(); setFormLocked(false); return; }
 
   var group = curGroup ? curGroup.name : '';
 
@@ -492,7 +589,7 @@ document.getElementById('nickname').addEventListener('change', function(){
   }
   hidePaid();
 
-  // 清空前一位的收件資料，避免殘留
+  // 清空前一位的收件資料
   document.getElementById('name').value = '';
   document.getElementById('phone').value = '';
   document.getElementById('store').value = '';
@@ -509,34 +606,115 @@ document.getElementById('nickname').addEventListener('change', function(){
     if (a && a > 0){ state.otherList.push({ g: gg, a: a }); state.otherTotal += a; }
   });
 
-  recalc();
-  fetchLastRecord(v);
+  // 先查身分：新客直接填，老客要驗證
+  checkIdentity(v);
 });
 
-/* ---------- 帶入上次收件資料 ---------- */
-function fetchLastRecord(nick){
-  state.lastStore = '';
-  state.lastAddr = '';
+/* ---------- 身分查詢 ---------- */
+function checkIdentity(nick){
+  setFormLocked(true);  // 先鎖住，等結果
   jsonp({ action: 'lastRecord', nickname: nick }, function(res){
-    if (!res.ok){ toast('查詢失敗：' + (res.msg || '未知')); return; }
-    if (!res.data){ toast('查無您的舊資料（首次訂購請直接填寫）'); return; }
-    var d = res.data;
-    if (d.name)  document.getElementById('name').value  = d.name;
-    if (d.phone) document.getElementById('phone').value = d.phone;
-    state.lastStore = d.store || '';
-    state.lastAddr  = d.address || '';
+    if (!res.ok){ setFormLocked(false); recalc(); return; }
+    if (res.status === 'new'){
+      // 沒有舊資料 → 新朋友，直接開放填寫
+      hideVerify();
+      setFormLocked(false);
+      recalc();
+    } else if (res.status === 'need_verify'){
+      // 老客 → 要求輸入電話後四碼
+      showVerify();
+    } else {
+      setFormLocked(false);
+      recalc();
+    }
+  }, function(){ setFormLocked(false); recalc(); });
+}
+
+/* ---------- 驗證框 ---------- */
+function showVerify(){
+  document.getElementById('verifyBox').classList.remove('hide');
+  document.getElementById('verifyInput').value = '';
+  document.getElementById('verifyMsg').textContent = '';
+  document.getElementById('verifyMsg').className = 'verify-msg';
+}
+function hideVerify(){
+  document.getElementById('verifyBox').classList.add('hide');
+}
+
+document.getElementById('verifyBtn').addEventListener('click', function(){
+  var last4 = document.getElementById('verifyInput').value.replace(/\D/g, '');
+  var msg = document.getElementById('verifyMsg');
+  if (last4.length !== 4){
+    msg.textContent = '請輸入 4 位數字';
+    msg.className = 'verify-msg err';
+    return;
+  }
+  var btn = this;
+  btn.disabled = true; btn.textContent = '驗證中…';
+
+  jsonp({ action: 'lastRecord', nickname: state.nick, last4: last4 }, function(res){
+    btn.disabled = false; btn.textContent = '確認';
+    if (res.ok && res.status === 'ok'){
+      msg.textContent = '✓ 驗證成功';
+      msg.className = 'verify-msg ok';
+      applyRecord(res.data);
+      setTimeout(function(){
+        hideVerify();
+        setFormLocked(false);
+        recalc();
+      }, 500);
+    } else {
+      msg.textContent = '後四碼不正確，請再確認';
+      msg.className = 'verify-msg err';
+    }
+  }, function(){
+    btn.disabled = false; btn.textContent = '確認';
+    msg.textContent = '連線錯誤，請再試一次';
+    msg.className = 'verify-msg err';
+  });
+});
+
+/* 驗證通過後帶入資料 */
+function applyRecord(d){
+  if (!d) return;
+  if (d.name)  document.getElementById('name').value  = d.name;
+  if (d.phone) document.getElementById('phone').value = d.phone;
+  state.lastStore = d.store || '';
+  state.lastAddr  = d.address || '';
+  var dv = document.querySelector('input[name=delivery]:checked');
+  if (dv){
+    if (dv.value === '交貨便' && state.lastStore) document.getElementById('store').value = state.lastStore;
+    if (dv.value === '宅配' && state.lastAddr)   document.getElementById('addr').value  = state.lastAddr;
+  }
+  toast('已帶入您的收件資料，可確認或修改');
+}
+
+/* 鎖住/開放姓名以下欄位（未驗證前不給填、也不顯示個資欄） */
+function setFormLocked(lock){
+  var ids = ['f-name','f-phone','f-delivery','f-store','f-addr','pickupBox',
+             'amountBox','f-pay','bankBox','f-payInfo','f-note','submitBtn'];
+  ids.forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.style.display = lock ? 'none' : '';
+  });
+  if (!lock){
+    // 開放時，門市/地址仍照取貨方式決定
+    var s = document.getElementById('f-store');
+    var a = document.getElementById('f-addr');
+    var pk = document.getElementById('pickupBox');
+    s.style.display = 'none'; a.style.display = 'none'; pk.style.display = 'none';
+    s.classList.add('hide'); a.classList.add('hide'); pk.classList.add('hide');
     var dv = document.querySelector('input[name=delivery]:checked');
     if (dv){
-      if (dv.value === '交貨便' && state.lastStore &&
-          !document.getElementById('store').value)
-        document.getElementById('store').value = state.lastStore;
-      if (dv.value === '宅配' && state.lastAddr &&
-          !document.getElementById('addr').value)
-        document.getElementById('addr').value = state.lastAddr;
+      if (dv.value === '交貨便'){ s.classList.remove('hide'); s.style.display=''; }
+      else if (dv.value === '宅配'){ a.classList.remove('hide'); a.style.display=''; }
+      else if (dv.value === '自取'){ pk.classList.remove('hide'); }
     }
-    toast('已帶入您上次的收件資料，可直接確認或修改');
-  }, function(){ toast('連線逾時，未帶入舊資料'); });
+    // amountBox 由 recalc 決定要不要顯示
+    document.getElementById('amountBox').style.display = '';
+  }
 }
+
 
 /* ---------- 已完成結帳 ---------- */
 function showPaid(){
