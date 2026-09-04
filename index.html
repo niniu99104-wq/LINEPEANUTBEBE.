@@ -147,6 +147,7 @@
     font-size:14px;padding:3px 0;color:var(--ink-soft);font-weight:400;
   }
   .amount-row .free{color:var(--ok);font-weight:600;}
+  .amount-row .pending{color:var(--accent-deep);font-weight:600;}
   .amount-total{
     display:flex;justify-content:space-between;align-items:baseline;
     margin-top:12px;padding-top:14px;border-top:1.5px dashed #e6c9b3;
@@ -251,6 +252,20 @@
     letter-spacing:.5px;
   }
   .welcome-bar b{font-weight:700;}
+
+  .poolship-box{
+    display:flex;gap:11px;align-items:flex-start;
+    background:linear-gradient(160deg,#fff8ef,#fdefe0);
+    border:1.5px solid #f0d9c0;border-radius:var(--r-sm);
+    padding:14px 15px;margin:-6px 0 20px;cursor:pointer;
+    transition:border-color .2s;
+  }
+  .poolship-box:active{border-color:var(--accent);}
+  .poolship-box input{margin-top:3px;width:19px;height:19px;flex-shrink:0;accent-color:var(--accent);}
+  .poolship-box .txt{font-size:13px;line-height:1.7;}
+  .poolship-box .txt b{color:var(--accent-deep);font-weight:700;font-size:14px;}
+  .poolship-box .txt .warn{color:var(--err);font-weight:700;font-size:12.5px;}
+  .poolship-box .txt .sub{color:var(--muted);font-size:12px;font-weight:400;}
 
   .hide{display:none;}
 
@@ -414,6 +429,15 @@
       <div class="err-msg">請選擇取貨方式</div>
     </div>
 
+    <label class="poolship-box hide" id="poolshipBox">
+      <input type="checkbox" id="poolshipChk">
+      <span class="txt">
+        <b>🚚 我要湊免運</b><br>
+        <span class="warn">⚠️ 湊免運須先支付商品金額 ⚠️</span><br>
+        <span class="sub">未達免運金額可繼續累積，達標即免運；每團到貨時間不同，需等商品全部到齊才會一起出貨，拆單運費另計。</span>
+      </span>
+    </label>
+
     <div class="field hide" id="f-store">
       <label>收件門市<span class="req">*</span></label>
       <input type="text" id="store" placeholder="例：7-11 大安門市 / 全家 忠孝店">
@@ -497,7 +521,7 @@
 
 <script>
 /* ============ 設定區 ============ */
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbz4cKcHBbgl7w5mpXLe8vrbINLJ1LI4NBmTKrySASJWj2xVOcn_kwwMa4CK_FRZULrt/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbyXZDqv6ctBZybgouxFvEvBHYBQ1ITsdJR9yYEAzrky3t-ZBpoJqDlF53ofHJHF4bY4/exec';
 var LINEPAY_URL = 'https://line.me/ti/p/taMX75HZDW';
 
 /* 運費規則 */
@@ -818,9 +842,21 @@ bindRadios('deliveryBox', function(v){
   } else if (v === '自取'){
     pk.classList.remove('hide');
   }
+
+  // 湊免運勾選：只在交貨便/宅配出現（自取本來就免運）
+  var pool = document.getElementById('poolshipBox');
+  if (v === '交貨便' || v === '宅配'){
+    pool.classList.remove('hide');
+  } else {
+    pool.classList.add('hide');
+    document.getElementById('poolshipChk').checked = false;
+  }
+
   state.delivery = v;
   recalc();
 });
+
+document.getElementById('poolshipChk').addEventListener('change', recalc);
 
 document.getElementById('mergeChk').addEventListener('change', recalc);
 
@@ -834,19 +870,34 @@ function recalc(){
   var merge = document.getElementById('mergeChk').checked && state.otherList.length > 0;
   var goods = state.goods + (merge ? state.otherTotal : 0);
 
+  // 湊免運：只在交貨便/宅配有效，運費暫不計、之後另計
+  var pool = document.getElementById('poolshipChk').checked &&
+             (state.delivery === '交貨便' || state.delivery === '宅配');
+
   var rule = SHIP_RULE[state.delivery] || { threshold: 0, fee: 0 };
   var freeShip = curGroup && curGroup.freeShip;
-  // 有自訂門檻就用它，否則用預設門檻
   var threshold = (curGroup && curGroup.freeThreshold > 0)
     ? curGroup.freeThreshold : rule.threshold;
-  var shipping = (freeShip || goods >= threshold) ? 0 : rule.fee;
+
+  var reachFree = freeShip || goods >= threshold;  // 是否已達免運
+
+  var shipping, poolPending = false;
+  if (reachFree){
+    shipping = 0;                       // 達標，免運（不論有沒有勾湊免運）
+  } else if (pool){
+    shipping = 0; poolPending = true;   // 湊免運未達標，運費先不收、繼續累積
+  } else {
+    shipping = rule.fee;                // 沒勾湊免運又未達標，直接加運費
+  }
   var total = goods + shipping;
 
   document.getElementById('goodsVal').textContent = goods.toLocaleString();
   document.getElementById('totalVal').textContent = total.toLocaleString();
 
   var shipVal = document.getElementById('shipVal');
-  if (shipping === 0){
+  if (poolPending){
+    shipVal.innerHTML = '<span class="pending">待湊滿</span>';
+  } else if (shipping === 0){
     shipVal.innerHTML = freeShip
       ? '<span class="free">本團免運 $0</span>'
       : '<span class="free">免運 $0</span>';
@@ -856,7 +907,15 @@ function recalc(){
   document.getElementById('shipRow').classList.remove('hide');
 
   var tip = document.getElementById('shipTip');
-  if (shipping > 0){
+  if (pool && reachFree){
+    tip.innerHTML = '🚚 已達免運！商品到齊馬上為您出貨';
+    tip.classList.remove('hide');
+  } else if (pool && !reachFree){
+    var diffP = threshold - goods;
+    tip.innerHTML = '還差 $' + diffP.toLocaleString() + '，繼續買買買 🛒（滿 $' +
+      threshold.toLocaleString() + '免運）';
+    tip.classList.remove('hide');
+  } else if (shipping > 0){
     var diff = threshold - goods;
     tip.textContent = '再買 $' + diff.toLocaleString() +
       ' 即可享免運（滿 $' + threshold.toLocaleString() + '）';
@@ -888,7 +947,8 @@ function recalc(){
   }
 
   document.getElementById('amountBox').classList.remove('hide');
-  state.calc = { merge: merge, goods: goods, shipping: shipping, total: total };
+  state.calc = { merge: merge, pool: pool, poolPending: poolPending,
+                 goods: goods, shipping: shipping, total: total };
 }
 
 function resetAmount(){
@@ -1053,6 +1113,8 @@ document.getElementById('submitBtn').addEventListener('click', function(){
     payMethod: pv,
     payInfo: document.getElementById('payInfo').value.trim(),
     merge: c.merge,
+    pool: c.pool,
+    poolPending: c.poolPending,
     goods: c.goods,
     shipping: c.shipping,
     amount: c.total,
