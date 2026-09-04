@@ -245,13 +245,39 @@
 
   /* 登入後歡迎列 */
   .welcome-bar{
-    background:linear-gradient(160deg,var(--accent-soft),#fbe6da);
-    border-radius:var(--r-sm);
-    padding:12px 16px;margin-bottom:22px;
-    font-size:13.5px;color:var(--accent-deep);font-weight:600;
-    letter-spacing:.5px;
+    display:flex;align-items:center;gap:13px;
+    background:linear-gradient(155deg,#fff6ee 0%,#fbe8db 100%);
+    border-radius:var(--r);
+    padding:15px 17px;margin-bottom:24px;
+    box-shadow:var(--shadow-soft);
+    position:relative;overflow:hidden;
   }
-  .welcome-bar b{font-weight:700;}
+  .welcome-bar::after{
+    content:'';position:absolute;right:-30px;top:-30px;
+    width:100px;height:100px;border-radius:50%;
+    background:rgba(255,255,255,.35);
+  }
+  .welcome-avatar{
+    width:44px;height:44px;flex-shrink:0;border-radius:50%;
+    background:linear-gradient(150deg,var(--accent),var(--accent-deep));
+    color:#fff;font-size:22px;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 3px 10px rgba(176,103,63,.28);
+    z-index:1;
+  }
+  .welcome-text{z-index:1;min-width:0;}
+  .welcome-hi{font-size:11.5px;color:var(--accent-deep);letter-spacing:2px;font-weight:600;opacity:.75;}
+  .welcome-name{
+    font-size:16px;font-weight:700;color:var(--ink);letter-spacing:.5px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    margin:1px 0 3px;
+  }
+  .welcome-group{
+    display:inline-block;font-size:11.5px;font-weight:600;
+    color:var(--accent-deep);background:rgba(255,255,255,.6);
+    padding:2px 10px;border-radius:20px;letter-spacing:.5px;
+    max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
 
   .poolship-box{
     display:flex;gap:11px;align-items:flex-start;
@@ -750,7 +776,17 @@ function enterForm(record){
 
   // 歡迎列
   var wb = document.getElementById('welcomeBar');
-  wb.innerHTML = '👋 <b>' + escapeHtml(state.nick) + '</b>　團別：' + escapeHtml(group);
+  // 去掉開頭的 @，再取第一個斜線（半形/全形）或 @ 之前當顯示名
+  var rawNick = String(state.nick).replace(/^[@＠]+/, '');
+  var displayNick = rawNick.split(/[\/／@＠]/)[0].trim() || rawNick || state.nick;
+  var avatarChar = displayNick.charAt(0) || '👋';
+  wb.innerHTML =
+    '<div class="welcome-avatar">' + escapeHtml(avatarChar) + '</div>' +
+    '<div class="welcome-text">' +
+      '<div class="welcome-hi">歡迎回來</div>' +
+      '<div class="welcome-name">' + escapeHtml(displayNick) + '</div>' +
+      '<div class="welcome-group">' + escapeHtml(group) + '</div>' +
+    '</div>';
 
   // 免運提示
   var hint = document.getElementById('shipRuleHint');
