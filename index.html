@@ -301,6 +301,27 @@
   .poolship-box .txt .warn{color:var(--err);font-weight:700;font-size:12.5px;}
   .poolship-box .txt .sub{color:var(--muted);font-size:12px;font-weight:400;}
 
+  .order-detail{margin-bottom:20px;}
+  .od-card{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r-sm);margin-bottom:10px;overflow:hidden;}
+  .od-head{display:flex;align-items:center;gap:8px;padding:13px 15px;cursor:pointer;background:var(--bg2);transition:background .2s;}
+  .od-head:active{background:var(--accent-soft);}
+  .od-arrow{font-size:11px;color:var(--muted);transition:transform .2s;flex-shrink:0;}
+  .od-card.open .od-arrow{transform:rotate(90deg);}
+  .od-name{flex:1;font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .od-count{font-size:11.5px;color:var(--muted);flex-shrink:0;}
+  .od-sum{font-size:14px;font-weight:700;color:var(--amount);flex-shrink:0;}
+  .od-body{display:none;padding:6px 15px 14px;}
+  .od-card.open .od-body{display:block;}
+  .od-item{display:flex;align-items:baseline;gap:8px;padding:6px 0;border-top:1px dashed var(--line);font-size:13px;}
+  .od-item:first-child{border-top:none;}
+  .od-item .nm{flex:1;color:var(--ink);line-height:1.5;}
+  .od-item .nm .spec{color:var(--muted);font-size:12px;}
+  .od-item .qty{color:var(--ink-soft);font-size:12.5px;flex-shrink:0;white-space:nowrap;}
+  .od-item .sub{color:var(--amount);font-weight:600;flex-shrink:0;white-space:nowrap;min-width:52px;text-align:right;}
+  .od-tag{display:inline-block;font-size:10.5px;font-weight:600;padding:1px 8px;border-radius:10px;margin-right:6px;background:var(--accent-soft);color:var(--accent-deep);}
+  .od-tag.other{background:#eef0ee;color:var(--muted);}
+  .od-empty{padding:12px 15px;font-size:12.5px;color:var(--muted);}
+
   .hide{display:none;}
 
   .btn{
@@ -504,6 +525,8 @@
       </div>
     </div>
 
+    <div class="order-detail hide" id="orderDetail"></div>
+
     <div class="amount-box hide" id="amountBox">
       <div class="amount-row"><span>商品金額</span><span>$<span id="goodsVal">0</span></span></div>
       <div class="amount-row hide" id="discountRow"><span>優惠折抵</span><span id="discountVal">-$0</span></div>
@@ -556,7 +579,7 @@
   <div id="doneCard" class="card done hide">
     <div class="tick">✓</div>
     <h2>回報完成！</h2>
-    <div class="sub">請複製下方內容貼回群組，我會盡快核對 😊</div>
+    <div class="sub">請複製下方內容貼回官方帳號，我會盡快核對 😊</div>
     <div class="copybox" id="resultText"></div>
     <button class="btn" id="copyBtn">複製內容</button>
     <button class="btn btn-ghost" id="againBtn">再填一筆</button>
@@ -567,7 +590,7 @@
 
 <script>
 /* ============ 設定區 ============ */
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbzHlvC_LFBIiynQpsEefl90vpv_z0HHoV0jwz1fKEYXtEZga542_20ViA4nq7yQ7QLL/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbwXExWXK2-KcDe2ikhyH0uz9GPVlF4MDUGYqVJsFJ_ziyeqKEPrrPsXZG-_43kIX1xA/exec';
 var LINEPAY_URL = 'https://line.me/ti/p/taMX75HZDW';
 var PAYUNI_URL = 'https://yunibebe.pse.is/9llum9';
 
@@ -852,16 +875,70 @@ function enterForm(record){
   state.otherList = [];
   state.otherTotal = 0;
   document.getElementById('amountBox').classList.add('hide');
+  var _od=document.getElementById('orderDetail'); _od.innerHTML=''; _od.classList.add('hide');
   jsonp({ action: 'myOrder', group: group, nickname: state.nick }, function(res){
     if (res.ok && res.data){
       state.goods = res.data.goods || 0;
       state.otherList = (res.data.others || []).map(function(o){ return { g:o.g, a:o.a }; });
       state.otherTotal = state.otherList.reduce(function(s,o){ return s + o.a; }, 0);
+      renderOrderDetail(group, res.data);
     }
     recalc();
   }, function(){ recalc(); });
 
   window.scrollTo(0,0);
+}
+
+/* ---------- 訂單明細摺疊卡 ---------- */
+function renderOrderDetail(group, data){
+  var box = document.getElementById('orderDetail');
+  var cards = [];
+
+  // 本團（預設展開）
+  cards.push(odCard(group, data.goods || 0, data.items || [], true, '本團'));
+
+  // 其他未付團（預設收合）
+  (data.others || []).forEach(function(o){
+    cards.push(odCard(o.g, o.a || 0, o.items || [], false, '其他團'));
+  });
+
+  box.innerHTML = cards.join('');
+  box.classList.remove('hide');
+
+  // 綁定展開/收合
+  box.querySelectorAll('.od-head').forEach(function(h){
+    h.addEventListener('click', function(){
+      h.parentNode.classList.toggle('open');
+    });
+  });
+}
+
+function odCard(groupName, sum, items, open, tagText){
+  var tagClass = (tagText === '本團') ? 'od-tag' : 'od-tag other';
+  var count = items.length;
+  var body;
+  if (count > 0){
+    body = items.map(function(it){
+      var spec = it.spec ? ' <span class="spec">' + escapeHtml(it.spec) + '</span>' : '';
+      return '<div class="od-item">' +
+        '<span class="nm">' + escapeHtml(it.name) + spec + '</span>' +
+        '<span class="qty">×' + (it.qty || 0) + '</span>' +
+        '<span class="sub">$' + (it.sub || 0).toLocaleString() + '</span>' +
+      '</div>';
+    }).join('');
+  } else {
+    body = '<div class="od-empty">（此團尚無明細，金額以應付為準）</div>';
+  }
+  return '<div class="od-card' + (open ? ' open' : '') + '">' +
+    '<div class="od-head">' +
+      '<span class="od-arrow">▶</span>' +
+      '<span class="' + tagClass + '">' + tagText + '</span>' +
+      '<span class="od-name">' + escapeHtml(groupName) + '</span>' +
+      (count > 0 ? '<span class="od-count">共' + count + '項</span>' : '') +
+      '<span class="od-sum">$' + (sum || 0).toLocaleString() + '</span>' +
+    '</div>' +
+    '<div class="od-body">' + body + '</div>' +
+  '</div>';
 }
 
 function escapeHtml(s){
@@ -1085,7 +1162,7 @@ function onPayChange(v){
     lab.innerHTML = '信用卡付款（PAYUNi）';
     inp.classList.add('hide');
     hint.innerHTML =
-      '請點下方連結至 PAYUNi 完成信用卡付款，付款後回群組告知即可（此付款方式恕不適用優惠折抵）<br>' +
+      '請點下方連結至 PAYUNi 完成信用卡付款，付款後回官方帳號告知即可（此付款方式恕不適用優惠折抵）<br>' +
       '<a href="' + PAYUNI_URL + '" target="_blank" rel="noopener" class="linepay-btn" style="background:var(--accent);">' +
       '💳 前往 PAYUNi 刷卡付款</a>';
     document.getElementById('payInfoErr').textContent = '';
@@ -1274,7 +1351,7 @@ function fallbackCopy(text, okMsg){
 }
 
 document.getElementById('copyBtn').addEventListener('click', function(){
-  copyText(document.getElementById('resultText').textContent, '已複製，貼回群組就完成囉！');
+  copyText(document.getElementById('resultText').textContent, '已複製，貼回官方帳號就完成囉！');
 });
 document.getElementById('againBtn').addEventListener('click', function(){ location.reload(); });
 
