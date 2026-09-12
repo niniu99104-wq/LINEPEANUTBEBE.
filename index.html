@@ -148,6 +148,8 @@
   }
   .amount-row .free{color:var(--ok);font-weight:600;}
   .amount-row .pending{color:var(--accent-deep);font-weight:600;}
+  .amount-row.discount{color:var(--ok);font-weight:600;}
+  .amount-row.discount .off{color:var(--ok);font-weight:700;}
   .amount-total{
     display:flex;justify-content:space-between;align-items:baseline;
     margin-top:12px;padding-top:14px;border-top:1.5px dashed #e6c9b3;
@@ -179,6 +181,8 @@
 
   /* 選項按鈕 */
   .radios{display:flex;gap:10px;}
+  #deliveryBox{flex-wrap:wrap;}
+  #deliveryBox label{flex:1 1 calc(50% - 5px);}
   .radios label{
     flex:1;margin:0;
     border:1.5px solid var(--line);border-radius:var(--r-sm);
@@ -450,6 +454,7 @@
         <label data-v="交貨便"><input type="radio" name="delivery" value="交貨便">交貨便</label>
         <label data-v="宅配"><input type="radio" name="delivery" value="宅配">宅配</label>
         <label data-v="自取"><input type="radio" name="delivery" value="自取">自取</label>
+        <label data-v="自行提供"><input type="radio" name="delivery" value="自行提供">自行提供</label>
       </div>
       <div class="hint" id="shipRuleHint">交貨便滿 $1500 免運，未滿 +$60｜宅配滿 $2000 免運，未滿 +$100</div>
       <div class="err-msg">請選擇取貨方式</div>
@@ -485,8 +490,17 @@
       </div>
     </div>
 
+    <div class="pickup-box hide" id="selfShipBox">
+      <div class="pickup-title">📦 自行提供寄件編號（免運）</div>
+      <div class="pickup-sub">
+        商品到貨後會再通知您 😊<br>
+        <b>屆時請提供您的寄件編號，我們會為您安排寄出。</b>
+      </div>
+    </div>
+
     <div class="amount-box hide" id="amountBox">
       <div class="amount-row"><span>商品金額</span><span>$<span id="goodsVal">0</span></span></div>
+      <div class="amount-row hide" id="discountRow"><span>優惠折抵</span><span id="discountVal">-$0</span></div>
       <div class="amount-row" id="shipRow"><span>運費</span><span id="shipVal">$0</span></div>
       <div class="amount-total">
         <span class="cap">應付總額</span>
@@ -547,14 +561,16 @@
 
 <script>
 /* ============ 設定區 ============ */
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbyXZDqv6ctBZybgouxFvEvBHYBQ1ITsdJR9yYEAzrky3t-ZBpoJqDlF53ofHJHF4bY4/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbzHlvC_LFBIiynQpsEefl90vpv_z0HHoV0jwz1fKEYXtEZga542_20ViA4nq7yQ7QLL/exec';
 var LINEPAY_URL = 'https://line.me/ti/p/taMX75HZDW';
+var PAYUNI_URL = 'https://yunibebe.pse.is/9llum9';
 
 /* 運費規則 */
 var SHIP_RULE = {
   '交貨便': { threshold: 1500, fee: 60 },
   '宅配':   { threshold: 2000, fee: 100 },
-  '自取':   { threshold: 0, fee: 0 }
+  '自取':   { threshold: 0, fee: 0 },
+  '自行提供': { threshold: 0, fee: 0 }
 };
 /* ============================== */
 
@@ -802,7 +818,9 @@ function enterForm(record){
     var lab = document.createElement('label');
     lab.setAttribute('data-v', p);
     lab.innerHTML = '<input type="radio" name="pay" value="' + p + '">' +
-                    (p === 'LINEPAY' ? 'LINE Pay' : '銀行轉帳／ATM');
+                    (p === 'LINEPAY' ? 'LINE Pay'
+                     : p === '信用卡' ? '信用卡'
+                     : '銀行轉帳／ATM');
     box.appendChild(lab);
   });
   document.getElementById('f-pay').classList.remove('hide');
@@ -859,11 +877,13 @@ bindRadios('deliveryBox', function(v){
   var s = document.getElementById('f-store');
   var a = document.getElementById('f-addr');
   var pk = document.getElementById('pickupBox');
+  var self = document.getElementById('selfShipBox');
   hideSubmitAlert();
   // 先全收起
   s.classList.add('hide');  s.style.display = 'none';
   a.classList.add('hide');  a.style.display = 'none';
   pk.classList.add('hide');
+  self.classList.add('hide');
   document.getElementById('store').value = '';
   document.getElementById('addr').value = '';
 
@@ -877,9 +897,11 @@ bindRadios('deliveryBox', function(v){
       document.getElementById('addr').value = state.lastAddr;
   } else if (v === '自取'){
     pk.classList.remove('hide');
+  } else if (v === '自行提供'){
+    self.classList.remove('hide');
   }
 
-  // 湊免運勾選：只在交貨便/宅配出現（自取本來就免運）
+  // 湊免運勾選：只在交貨便/宅配出現（自取、自行提供本來就免運）
   var pool = document.getElementById('poolshipBox');
   if (v === '交貨便' || v === '宅配'){
     pool.classList.remove('hide');
@@ -897,6 +919,24 @@ document.getElementById('poolshipChk').addEventListener('change', recalc);
 document.getElementById('mergeChk').addEventListener('change', recalc);
 
 /* ---------- 金額 / 運費計算 ---------- */
+// 解析團別折抵設定：'50'=折$50；'95%'或'0.95'=打折
+function calcDiscount(goods){
+  if (!curGroup || !curGroup.discount) return 0;
+  var d = String(curGroup.discount).trim();
+  if (!d) return 0;
+  if (d.indexOf('%') > -1){
+    var pct = parseFloat(d);              // 95% → 打95折 → 折掉5%
+    if (isNaN(pct)) return 0;
+    return Math.round(goods * (1 - pct / 100));
+  }
+  var num = parseFloat(d);
+  if (isNaN(num)) return 0;
+  if (num > 0 && num < 1){                // 0.95 → 打95折
+    return Math.round(goods * (1 - num));
+  }
+  return Math.min(Math.round(num), goods); // 固定金額，不超過商品額
+}
+
 function recalc(){
   if (!state.nick || !state.delivery){
     document.getElementById('amountBox').classList.add('hide');
@@ -925,10 +965,27 @@ function recalc(){
   } else {
     shipping = rule.fee;                // 沒勾湊免運又未達標，直接加運費
   }
-  var total = goods + shipping;
+
+  // 優惠折抵（只折商品，刷卡不適用）
+  var payChecked = document.querySelector('input[name=pay]:checked');
+  var isCard = payChecked && payChecked.value === '信用卡';
+  var discount = isCard ? 0 : calcDiscount(goods);
+
+  var total = goods - discount + shipping;
 
   document.getElementById('goodsVal').textContent = goods.toLocaleString();
   document.getElementById('totalVal').textContent = total.toLocaleString();
+
+  // 折抵行
+  var dRow = document.getElementById('discountRow');
+  if (discount > 0){
+    document.getElementById('discountVal').innerHTML =
+      '<span class="off">-$' + discount.toLocaleString() + '</span>';
+    dRow.classList.remove('hide');
+    dRow.classList.add('discount');
+  } else {
+    dRow.classList.add('hide');
+  }
 
   var shipVal = document.getElementById('shipVal');
   if (poolPending){
@@ -984,7 +1041,7 @@ function recalc(){
 
   document.getElementById('amountBox').classList.remove('hide');
   state.calc = { merge: merge, pool: pool, poolPending: poolPending,
-                 goods: goods, shipping: shipping, total: total };
+                 goods: goods, discount: discount, shipping: shipping, total: total };
 }
 
 function resetAmount(){
@@ -1013,28 +1070,43 @@ function onPayChange(v){
   var inp = document.getElementById('payInfo');
   var hint = document.getElementById('payInfoHint');
   var bankBox = document.getElementById('bankBox');
-  f.classList.remove('hide');
   inp.value = '';
 
-  if (v === 'LINEPAY'){
+  if (v === '信用卡'){
+    // 刷卡：不用填後五碼，顯示 PAYUNi 連結；折抵不適用
     bankBox.classList.add('hide');
-    lab.innerHTML = 'LINE Pay 轉帳名字<span class="req">*</span>';
-    inp.placeholder = '好友轉帳顯示的名字';
-    inp.setAttribute('inputmode', 'text');
+    f.classList.remove('hide');
+    lab.innerHTML = '信用卡付款（PAYUNi）';
+    inp.classList.add('hide');
     hint.innerHTML =
-      '請先加豆媽好友，用 LINE Pay 好友轉帳完成付款，再回來填寫轉帳時顯示的名稱<br>' +
-      '<a href="' + LINEPAY_URL + '" target="_blank" rel="noopener" class="linepay-btn">' +
-      '👉 點我加豆媽好友</a>';
-    document.getElementById('payInfoErr').textContent = '請填寫 LINE Pay 名字';
+      '請點下方連結至 PAYUNi 完成信用卡付款，付款後回群組告知即可（此付款方式恕不適用優惠折抵）<br>' +
+      '<a href="' + PAYUNI_URL + '" target="_blank" rel="noopener" class="linepay-btn" style="background:var(--accent);">' +
+      '💳 前往 PAYUNi 刷卡付款</a>';
+    document.getElementById('payInfoErr').textContent = '';
   } else {
-    renderBank();
-    bankBox.classList.remove('hide');
-    lab.innerHTML = '帳號後五碼<span class="req">*</span>';
-    inp.placeholder = '5 位數字';
-    inp.setAttribute('inputmode', 'numeric');
-    hint.textContent = '您轉出帳號的最後五碼';
-    document.getElementById('payInfoErr').textContent = '請填寫 5 位數字';
+    inp.classList.remove('hide');
+    f.classList.remove('hide');
+    if (v === 'LINEPAY'){
+      bankBox.classList.add('hide');
+      lab.innerHTML = 'LINE Pay 轉帳名字<span class="req">*</span>';
+      inp.placeholder = '好友轉帳顯示的名字';
+      inp.setAttribute('inputmode', 'text');
+      hint.innerHTML =
+        '請先加豆媽好友，用 LINE Pay 好友轉帳完成付款，再回來填寫轉帳時顯示的名稱<br>' +
+        '<a href="' + LINEPAY_URL + '" target="_blank" rel="noopener" class="linepay-btn">' +
+        '👉 點我加豆媽好友</a>';
+      document.getElementById('payInfoErr').textContent = '請填寫 LINE Pay 名字';
+    } else {
+      renderBank();
+      bankBox.classList.remove('hide');
+      lab.innerHTML = '帳號後五碼<span class="req">*</span>';
+      inp.placeholder = '5 位數字';
+      inp.setAttribute('inputmode', 'numeric');
+      hint.textContent = '您轉出帳號的最後五碼';
+      document.getElementById('payInfoErr').textContent = '請填寫 5 位數字';
+    }
   }
+  recalc();  // 付款方式影響折抵，重算
 }
 
 function renderBank(){
@@ -1098,6 +1170,8 @@ function validate(){
   var pv = document.querySelector('input[name=pay]:checked');
   if (!pv) {
     fail('f-pay', '付款方式');
+  } else if (pv.value === '信用卡') {
+    // 信用卡：PAYUNi 線上付款，不需填欄位
   } else {
     var pi = document.getElementById('payInfo').value.trim();
     if (pv.value === 'LINEPAY') {
@@ -1152,6 +1226,7 @@ document.getElementById('submitBtn').addEventListener('click', function(){
     pool: c.pool,
     poolPending: c.poolPending,
     goods: c.goods,
+    discount: c.discount,
     shipping: c.shipping,
     amount: c.total,
     note: document.getElementById('note').value.trim()
