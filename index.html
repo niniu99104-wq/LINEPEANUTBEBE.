@@ -234,6 +234,10 @@
   .pickup-title{font-size:14.5px;font-weight:700;color:var(--ok);margin-bottom:7px;letter-spacing:.5px;}
   .pickup-sub{font-size:13px;color:#6a9a84;line-height:1.8;font-weight:400;}
   .pickup-sub b{color:var(--ok);font-weight:600;}
+  .pickup-sub .paynote{
+    display:block;margin-top:8px;
+    color:var(--err);font-weight:700;font-size:12.5px;letter-spacing:.5px;
+  }
 
   /* 登入後四碼大輸入框 */
   .last4-input{
@@ -454,7 +458,7 @@
         <label data-v="交貨便"><input type="radio" name="delivery" value="交貨便">交貨便</label>
         <label data-v="宅配"><input type="radio" name="delivery" value="宅配">宅配</label>
         <label data-v="自取"><input type="radio" name="delivery" value="自取">自取</label>
-        <label data-v="自行提供"><input type="radio" name="delivery" value="自行提供">自行提供</label>
+        <label data-v="自行提供"><input type="radio" name="delivery" value="自行提供">提供寄件編號</label>
       </div>
       <div class="hint" id="shipRuleHint">交貨便滿 $1500 免運，未滿 +$60｜宅配滿 $2000 免運，未滿 +$100</div>
       <div class="err-msg">請選擇取貨方式</div>
@@ -487,14 +491,16 @@
       <div class="pickup-sub">
         到貨後會再通知您領取時間 😊<br>
         <b>新朋友請記得私訊官方帳號，告知您的社群內名稱唷！</b>
+        <span class="paynote">⚠️ 須先支付商品金額 ⚠️</span>
       </div>
     </div>
 
     <div class="pickup-box hide" id="selfShipBox">
-      <div class="pickup-title">📦 自行提供寄件編號（免運）</div>
+      <div class="pickup-title">📦 提供寄件編號（免運）</div>
       <div class="pickup-sub">
         商品到貨後會再通知您 😊<br>
         <b>屆時請提供您的寄件編號，我們會為您安排寄出。</b>
+        <span class="paynote">⚠️ 須先支付商品金額 ⚠️</span>
       </div>
     </div>
 
