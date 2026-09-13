@@ -322,6 +322,14 @@
   .od-tag.other{background:#eef0ee;color:var(--muted);}
   .od-empty{padding:12px 15px;font-size:12.5px;color:var(--muted);}
 
+  .dropship-box{
+    background:linear-gradient(160deg,#fdf0f4,#fbe4ec);
+    border:1.5px solid #f0c8d8;border-radius:var(--r-sm);
+    padding:14px 16px;margin:-6px 0 20px;
+  }
+  .dropship-title{font-size:14px;font-weight:700;color:#c2568a;margin-bottom:5px;letter-spacing:.5px;}
+  .dropship-sub{font-size:12.5px;color:#a85a7a;line-height:1.7;}
+
   .hide{display:none;}
 
   .btn{
@@ -485,6 +493,11 @@
       <div class="err-msg">請選擇取貨方式</div>
     </div>
 
+    <div class="dropship-box hide" id="dropshipBox">
+      <div class="dropship-title">🎁 已達滿額，廠商直寄到府！</div>
+      <div class="dropship-sub">本團您已符合滿額直寄資格，將由廠商直接宅配到府，請於下方填寫收件地址。</div>
+    </div>
+
     <label class="poolship-box hide" id="poolshipBox">
       <input type="checkbox" id="poolshipChk">
       <span class="txt">
@@ -579,7 +592,7 @@
   <div id="doneCard" class="card done hide">
     <div class="tick">✓</div>
     <h2>回報完成！</h2>
-    <div class="sub">請複製下方內容貼回官方帳號，我會盡快核對 😊</div>
+    <div class="sub">請複製下方內容貼回群組，我會盡快核對 😊</div>
     <div class="copybox" id="resultText"></div>
     <button class="btn" id="copyBtn">複製內容</button>
     <button class="btn btn-ghost" id="againBtn">再填一筆</button>
@@ -590,7 +603,7 @@
 
 <script>
 /* ============ 設定區 ============ */
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbwXExWXK2-KcDe2ikhyH0uz9GPVlF4MDUGYqVJsFJ_ziyeqKEPrrPsXZG-_43kIX1xA/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbx9MmaUFy2FYF01HJtsZ7c4CRqataiJ2olB3iwNr1pHckVVToVsOi0LTIGbYel2PyDG/exec';
 var LINEPAY_URL = 'https://line.me/ti/p/taMX75HZDW';
 var PAYUNI_URL = 'https://yunibebe.pse.is/9llum9';
 
@@ -882,11 +895,56 @@ function enterForm(record){
       state.otherList = (res.data.others || []).map(function(o){ return { g:o.g, a:o.a }; });
       state.otherTotal = state.otherList.reduce(function(s,o){ return s + o.a; }, 0);
       renderOrderDetail(group, res.data);
+      applyDropship();
     }
     recalc();
   }, function(){ recalc(); });
 
   window.scrollTo(0,0);
+}
+
+/* ---------- 滿額廠商直寄：達標鎖定只能宅配 ---------- */
+function applyDropship(){
+  var box = document.getElementById('dropshipBox');
+  var threshold = (curGroup && curGroup.dropship > 0) ? curGroup.dropship : 0;
+  var reached = threshold > 0 && (state.goods || 0) >= threshold;
+
+  var labels = document.querySelectorAll('#deliveryBox label');
+
+  if (reached){
+    // 鎖定：只留宅配，其他隱藏；自動選宅配
+    labels.forEach(function(lab){
+      var v = lab.getAttribute('data-v');
+      if (v === '宅配'){
+        lab.style.display = '';
+        lab.classList.add('on');
+        lab.querySelector('input').checked = true;
+      } else {
+        lab.style.display = 'none';
+        lab.classList.remove('on');
+        lab.querySelector('input').checked = false;
+      }
+    });
+    box.classList.remove('hide');
+    document.getElementById('shipRuleHint').style.display = 'none';
+    // 觸發宅配的顯示（地址欄、運費計算）
+    triggerDelivery('宅配');
+  } else {
+    // 未達標：全部取貨方式正常顯示
+    labels.forEach(function(lab){ lab.style.display = ''; });
+    box.classList.add('hide');
+    document.getElementById('shipRuleHint').style.display = '';
+  }
+}
+
+// 以程式方式選定某取貨方式（等同點擊）
+function triggerDelivery(v){
+  var lab = document.querySelector('#deliveryBox label[data-v="' + v + '"]');
+  if (!lab) return;
+  document.querySelectorAll('#deliveryBox label').forEach(function(l){ l.classList.remove('on'); });
+  lab.classList.add('on');
+  lab.querySelector('input').checked = true;
+  if (typeof deliveryChange === 'function') deliveryChange(v);
 }
 
 /* ---------- 訂單明細摺疊卡 ---------- */
@@ -956,7 +1014,9 @@ function hidePaid(){
 }
 
 /* ---------- 取貨方式 ---------- */
-bindRadios('deliveryBox', function(v){
+bindRadios('deliveryBox', function(v){ deliveryChange(v); });
+
+function deliveryChange(v){
   var s = document.getElementById('f-store');
   var a = document.getElementById('f-addr');
   var pk = document.getElementById('pickupBox');
@@ -995,7 +1055,7 @@ bindRadios('deliveryBox', function(v){
 
   state.delivery = v;
   recalc();
-});
+}
 
 document.getElementById('poolshipChk').addEventListener('change', recalc);
 
@@ -1162,7 +1222,7 @@ function onPayChange(v){
     lab.innerHTML = '信用卡付款（PAYUNi）';
     inp.classList.add('hide');
     hint.innerHTML =
-      '請點下方連結至 PAYUNi 完成信用卡付款，付款後回官方帳號告知即可（此付款方式恕不適用優惠折抵）<br>' +
+      '請點下方連結至 PAYUNi 完成信用卡付款，付款後回群組告知即可（此付款方式恕不適用優惠折抵）<br>' +
       '<a href="' + PAYUNI_URL + '" target="_blank" rel="noopener" class="linepay-btn" style="background:var(--accent);">' +
       '💳 前往 PAYUNi 刷卡付款</a>';
     document.getElementById('payInfoErr').textContent = '';
@@ -1351,7 +1411,7 @@ function fallbackCopy(text, okMsg){
 }
 
 document.getElementById('copyBtn').addEventListener('click', function(){
-  copyText(document.getElementById('resultText').textContent, '已複製，貼回官方帳號就完成囉！');
+  copyText(document.getElementById('resultText').textContent, '已複製，貼回群組就完成囉！');
 });
 document.getElementById('againBtn').addEventListener('click', function(){ location.reload(); });
 
