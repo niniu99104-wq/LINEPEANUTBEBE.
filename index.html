@@ -431,7 +431,7 @@
       <div class="err-msg" id="loginMsg">後四碼不正確，請再確認</div>
     </div>
 
-    <button class="btn hide" id="loginBtn">登　入</button>
+    <button class="btn hide" id="loginBtn">登 入</button>
   </div>
 
   <!-- ② 建檔頁（新朋友首次） -->
@@ -542,7 +542,7 @@
 
     <div class="amount-box hide" id="amountBox">
       <div class="amount-row"><span>商品金額</span><span>$<span id="goodsVal">0</span></span></div>
-      <div class="amount-row hide" id="discountRow"><span>優惠折抵</span><span id="discountVal">-$0</span></div>
+      <div class="amount-row hide" id="discountRow"><span>折扣折抵</span><span id="discountVal">-$0</span></div>
       <div class="amount-row" id="shipRow"><span>運費</span><span id="shipVal">$0</span></div>
       <div class="amount-total">
         <span class="cap">應付總額</span>
@@ -592,7 +592,7 @@
   <div id="doneCard" class="card done hide">
     <div class="tick">✓</div>
     <h2>回報完成！</h2>
-    <div class="sub">請複製下方內容貼回群組，我會盡快核對 😊</div>
+    <div class="sub">請複製下方內容貼回官方帳號給土豆媽，我會盡快核對 😊</div>
     <div class="copybox" id="resultText"></div>
     <button class="btn" id="copyBtn">複製內容</button>
     <button class="btn btn-ghost" id="againBtn">再填一筆</button>
@@ -618,7 +618,7 @@ var SHIP_RULE = {
 
 var DATA = { groups: [], members: {}, amounts: {}, allPaid: {}, bank: [] };
 var curGroup = null;
-var state = { nick: '', delivery: '', goods: 0, otherTotal: 0, otherList: [] };
+var state = { nick: '', delivery: '', goods: 0, memberDiscount: 0, otherTotal: 0, otherDiscountTotal: 0, otherList: [] };
 
 /* ---------- JSONP ---------- */
 function jsonp(params, onOk, onErr){
@@ -754,7 +754,7 @@ document.getElementById('loginBtn').addEventListener('click', function(){
   btn.disabled = true; btn.textContent = '登入中…';
 
   jsonp({ action: 'lastRecord', nickname: state.nick, last4: last4 }, function(res){
-    btn.disabled = false; btn.textContent = '登　入';
+    btn.disabled = false; btn.textContent = '登 入';
     if (res.ok && res.status === 'ok'){
       enterForm(res.data);
     } else {
@@ -762,7 +762,7 @@ document.getElementById('loginBtn').addEventListener('click', function(){
       document.getElementById('loginMsg').textContent = '後四碼不正確，請再確認';
     }
   }, function(){
-    btn.disabled = false; btn.textContent = '登　入';
+    btn.disabled = false; btn.textContent = '登 入';
     lf.classList.add('bad');
     document.getElementById('loginMsg').textContent = '連線錯誤，請再試一次';
   });
@@ -885,6 +885,8 @@ function enterForm(record){
 
   // 金額改登入後單獨查詢（首頁不載入）
   state.goods = 0;
+  state.memberDiscount = 0;
+  state.otherDiscountTotal = 0;
   state.otherList = [];
   state.otherTotal = 0;
   document.getElementById('amountBox').classList.add('hide');
@@ -892,8 +894,12 @@ function enterForm(record){
   jsonp({ action: 'myOrder', group: group, nickname: state.nick }, function(res){
     if (res.ok && res.data){
       state.goods = res.data.goods || 0;
-      state.otherList = (res.data.others || []).map(function(o){ return { g:o.g, a:o.a }; });
+      state.memberDiscount = res.data.memberDiscount || 0;
+      
+      state.otherList = (res.data.others || []).map(function(o){ return { g:o.g, a:o.a, d:o.d || 0 }; });
       state.otherTotal = state.otherList.reduce(function(s,o){ return s + o.a; }, 0);
+      state.otherDiscountTotal = state.otherList.reduce(function(s,o){ return s + o.d; }, 0);
+      
       renderOrderDetail(group, res.data);
       applyDropship();
     }
@@ -1109,21 +1115,29 @@ function recalc(){
     shipping = rule.fee;                // 沒勾湊免運又未達標，直接加運費
   }
 
-  // 優惠折抵（只折商品，刷卡不適用）
+  // ==== 折扣計算整合 ====
+  // 1. 專屬手動折扣 (有合併就把其他團的手動折扣也加進來)
+  var manualDiscount = state.memberDiscount + (merge ? state.otherDiscountTotal : 0);
+
+  // 2. 團別優惠折抵（只折商品，刷卡不適用）
   var payChecked = document.querySelector('input[name=pay]:checked');
   var isCard = payChecked && payChecked.value === '信用卡';
-  var discount = isCard ? 0 : calcDiscount(goods);
+  var groupDiscount = isCard ? 0 : calcDiscount(goods);
 
-  var total = goods - discount + shipping;
+  // 3. 總折扣 = 手動折扣 + 團別折扣
+  var totalDiscount = manualDiscount + groupDiscount;
+
+  var total = goods - totalDiscount + shipping;
+  if (total < 0) total = 0; // 防呆避免應付變負數
 
   document.getElementById('goodsVal').textContent = goods.toLocaleString();
   document.getElementById('totalVal').textContent = total.toLocaleString();
 
-  // 折抵行
+  // 折抵行顯示
   var dRow = document.getElementById('discountRow');
-  if (discount > 0){
+  if (totalDiscount > 0){
     document.getElementById('discountVal').innerHTML =
-      '<span class="off">-$' + discount.toLocaleString() + '</span>';
+      '<span class="off">-$' + totalDiscount.toLocaleString() + '</span>';
     dRow.classList.remove('hide');
     dRow.classList.add('discount');
   } else {
@@ -1173,7 +1187,7 @@ function recalc(){
   var ub = document.getElementById('unpaidBox');
   if (state.otherList.length > 0 && !merge){
     var listHtml = state.otherList.map(function(o){
-      return '・' + o.g + '　$' + o.a.toLocaleString();
+      return '・' + o.g + ' $' + o.a.toLocaleString();
     }).join('<br>');
     ub.innerHTML = '⚠️ 未勾選合併，以下 <b>' + state.otherList.length +
       '</b> 團請記得分別回報：<br>' + listHtml;
@@ -1184,11 +1198,11 @@ function recalc(){
 
   document.getElementById('amountBox').classList.remove('hide');
   state.calc = { merge: merge, pool: pool, poolPending: poolPending,
-                 goods: goods, discount: discount, shipping: shipping, total: total };
+                 goods: goods, discount: totalDiscount, shipping: shipping, total: total };
 }
 
 function resetAmount(){
-  state = { nick: '', delivery: state.delivery, goods: 0, otherTotal: 0, otherList: [] };
+  state = { nick: '', delivery: state.delivery, goods: 0, memberDiscount: 0, otherTotal: 0, otherDiscountTotal: 0, otherList: [] };
   document.getElementById('amountBox').classList.add('hide');
   document.getElementById('mergeChk').checked = false;
 }
@@ -1222,7 +1236,7 @@ function onPayChange(v){
     lab.innerHTML = '信用卡付款（PAYUNi）';
     inp.classList.add('hide');
     hint.innerHTML =
-      '請點下方連結至 PAYUNi 完成信用卡付款，付款後回群組告知即可（此付款方式恕不適用優惠折抵）<br>' +
+      '請點下方連結至 PAYUNi 完成信用卡付款，付款後回官方帳號給土豆媽告知即可（此付款方式恕不適用優惠折抵）<br>' +
       '<a href="' + PAYUNI_URL + '" target="_blank" rel="noopener" class="linepay-btn" style="background:var(--accent);">' +
       '💳 前往 PAYUNi 刷卡付款</a>';
     document.getElementById('payInfoErr').textContent = '';
@@ -1411,7 +1425,7 @@ function fallbackCopy(text, okMsg){
 }
 
 document.getElementById('copyBtn').addEventListener('click', function(){
-  copyText(document.getElementById('resultText').textContent, '已複製，貼回群組就完成囉！');
+  copyText(document.getElementById('resultText').textContent, '已複製，貼回官方帳號給土豆媽就完成囉！');
 });
 document.getElementById('againBtn').addEventListener('click', function(){ location.reload(); });
 
