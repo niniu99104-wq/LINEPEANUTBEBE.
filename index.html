@@ -66,7 +66,7 @@
   .req{color:var(--accent);margin-left:3px;}
   .hint{font-size:12px;color:var(--muted);font-weight:400;margin-top:7px;line-height:1.7;}
 
-  input[type=text],input[type=tel],input[type=date],select,textarea{
+  input[type=text],input[type=tel],select,textarea{
     width:100%;padding:13px 15px;
     border:1.5px solid var(--line);border-radius:var(--r-sm);
     font-size:16px;font-family:inherit;color:var(--ink);
@@ -580,21 +580,6 @@
       <div class="err-msg" id="payInfoErr">請填寫</div>
     </div>
 
-    <!-- ★ 新增晚點出貨勾選與日期欄位 ★ -->
-    <label class="poolship-box" id="delayShipBox" style="margin:0 0 20px 0;">
-      <input type="checkbox" id="delayShipChk">
-      <span class="txt">
-        <b>⏳ 我要晚點出貨</b><br>
-        <span class="warn">⚠️ 須先完成結帳，方可為您保留商品 ⚠️</span><br>
-        <span class="sub">勾選後請於下方指定希望的出貨日期。</span>
-      </span>
-    </label>
-    <div class="field hide" id="f-delayDate">
-      <label>指定出貨日期<span class="req">*</span></label>
-      <input type="date" id="delayDate">
-      <div class="err-msg">請選擇出貨日期</div>
-    </div>
-
     <div class="field" id="f-note">
       <label>備註（選填）</label>
       <textarea id="note" placeholder="有其他需要說明的再填寫"></textarea>
@@ -1040,18 +1025,6 @@ function hidePaid(){
   document.getElementById('paidBox').classList.add('hide');
 }
 
-/* ---------- 晚點出貨選項 ---------- */
-document.getElementById('delayShipChk').addEventListener('change', function(){
-  var dateField = document.getElementById('f-delayDate');
-  if (this.checked) {
-    dateField.classList.remove('hide');
-  } else {
-    dateField.classList.add('hide');
-    document.getElementById('delayDate').value = '';
-    dateField.classList.remove('bad');
-  }
-});
-
 /* ---------- 取貨方式 ---------- */
 bindRadios('deliveryBox', function(v){ deliveryChange(v); });
 
@@ -1236,9 +1209,6 @@ function resetAmount(){
   state = { nick: '', delivery: state.delivery, dropshipLocked: false, goods: 0, memberDiscount: 0, otherTotal: 0, otherDiscountTotal: 0, otherList: [] };
   document.getElementById('amountBox').classList.add('hide');
   document.getElementById('mergeChk').checked = false;
-  document.getElementById('delayShipChk').checked = false;
-  document.getElementById('f-delayDate').classList.add('hide');
-  document.getElementById('delayDate').value = '';
 }
 
 /* ---------- 單選共用 ---------- */
@@ -1330,7 +1300,7 @@ function validate(){
   var problems = [];  // 收集缺漏項目，最後給明確提示
 
   // 先清掉所有紅框
-  ['f-name','f-phone','f-delivery','f-store','f-addr','f-pay','f-payInfo', 'f-delayDate']
+  ['f-name','f-phone','f-delivery','f-store','f-addr','f-pay','f-payInfo']
     .forEach(function(id){
       var el = document.getElementById(id);
       if (el) el.classList.remove('bad');
@@ -1371,13 +1341,6 @@ function validate(){
     }
   }
 
-  // ★ 驗證晚點出貨的日期
-  if (document.getElementById('delayShipChk').checked) {
-    if (!document.getElementById('delayDate').value.trim()) {
-      fail('f-delayDate', '指定出貨日期');
-    }
-  }
-
   return problems;  // 空陣列 = 通過
 }
 
@@ -1407,16 +1370,6 @@ document.getElementById('submitBtn').addEventListener('click', function(){
   var pv = document.querySelector('input[name=pay]:checked').value;
   var c = state.calc || { merge:false, goods:0, shipping:0, total:0 };
 
-  // ★ 將晚點出貨的資訊打包進備註
-  var rawNote = document.getElementById('note').value.trim();
-  var finalNote = rawNote;
-  var delayChecked = document.getElementById('delayShipChk').checked;
-  var delayDate = document.getElementById('delayDate').value.trim();
-  
-  if (delayChecked && delayDate) {
-    finalNote = '【晚點出貨】指定日期：' + delayDate + (rawNote ? '\n' + rawNote : '');
-  }
-
   var payload = {
     group: curGroup ? curGroup.name : document.getElementById('group').value,
     nickname: nick,
@@ -1435,7 +1388,7 @@ document.getElementById('submitBtn').addEventListener('click', function(){
     discount: c.discount,
     shipping: c.shipping,
     amount: c.total,
-    note: finalNote // ★ 送出組合好的備註
+    note: document.getElementById('note').value.trim()
   };
 
   jsonp({ action: 'submit', payload: JSON.stringify(payload) }, function(res){
