@@ -927,10 +927,11 @@ function applyDropship(){
     });
     box.classList.remove('hide');
     document.getElementById('shipRuleHint').style.display = 'none';
-    // 觸發宅配的顯示（地址欄、運費計算）
+    state.dropshipLocked = true;
     triggerDelivery('宅配');
   } else {
     // 未達標：全部取貨方式正常顯示
+    state.dropshipLocked = false;
     labels.forEach(function(lab){ lab.style.display = ''; });
     box.classList.add('hide');
     document.getElementById('shipRuleHint').style.display = '';
@@ -1046,7 +1047,7 @@ function deliveryChange(v){
 
   // 湊免運勾選：只在交貨便/宅配出現（自取、自行提供本來就免運）
   var pool = document.getElementById('poolshipBox');
-  if (v === '交貨便' || v === '宅配'){
+  if ((v === '交貨便' || v === '宅配') && !state.dropshipLocked){
     pool.classList.remove('hide');
   } else {
     pool.classList.add('hide');
