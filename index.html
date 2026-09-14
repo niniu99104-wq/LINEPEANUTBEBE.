@@ -66,7 +66,7 @@
   .req{color:var(--accent);margin-left:3px;}
   .hint{font-size:12px;color:var(--muted);font-weight:400;margin-top:7px;line-height:1.7;}
 
-  input[type=text],input[type=tel],select,textarea{
+  input[type=text],input[type=tel],input[type=date],select,textarea{
     width:100%;padding:13px 15px;
     border:1.5px solid var(--line);border-radius:var(--r-sm);
     font-size:16px;font-family:inherit;color:var(--ink);
@@ -431,7 +431,7 @@
       <div class="err-msg" id="loginMsg">後四碼不正確，請再確認</div>
     </div>
 
-    <button class="btn hide" id="loginBtn">登　入</button>
+    <button class="btn hide" id="loginBtn">登 入</button>
   </div>
 
   <!-- ② 建檔頁（新朋友首次） -->
@@ -580,6 +580,21 @@
       <div class="err-msg" id="payInfoErr">請填寫</div>
     </div>
 
+    <!-- ★ 新增晚點出貨勾選與日期欄位 ★ -->
+    <label class="poolship-box" id="delayShipBox" style="margin:0 0 20px 0;">
+      <input type="checkbox" id="delayShipChk">
+      <span class="txt">
+        <b>⏳ 我要晚點出貨</b><br>
+        <span class="warn">⚠️ 須先完成結帳，方可為您保留商品 ⚠️</span><br>
+        <span class="sub">勾選後請於下方指定希望的出貨日期。</span>
+      </span>
+    </label>
+    <div class="field hide" id="f-delayDate">
+      <label>指定出貨日期<span class="req">*</span></label>
+      <input type="date" id="delayDate">
+      <div class="err-msg">請選擇出貨日期</div>
+    </div>
+
     <div class="field" id="f-note">
       <label>備註（選填）</label>
       <textarea id="note" placeholder="有其他需要說明的再填寫"></textarea>
@@ -618,7 +633,9 @@ var SHIP_RULE = {
 
 var DATA = { groups: [], members: {}, amounts: {}, allPaid: {}, bank: [] };
 var curGroup = null;
-var state = { nick: '', delivery: '', goods: 0, otherTotal: 0, otherList: [] };
+
+// ★ 變數 state 包含所有計算金額相關的暫存資訊
+var state = { nick: '', delivery: '', dropshipLocked: false, goods: 0, memberDiscount: 0, otherTotal: 0, otherDiscountTotal: 0, otherList: [] };
 
 /* ---------- JSONP ---------- */
 function jsonp(params, onOk, onErr){
@@ -754,7 +771,7 @@ document.getElementById('loginBtn').addEventListener('click', function(){
   btn.disabled = true; btn.textContent = '登入中…';
 
   jsonp({ action: 'lastRecord', nickname: state.nick, last4: last4 }, function(res){
-    btn.disabled = false; btn.textContent = '登　入';
+    btn.disabled = false; btn.textContent = '登 入';
     if (res.ok && res.status === 'ok'){
       enterForm(res.data);
     } else {
@@ -762,7 +779,7 @@ document.getElementById('loginBtn').addEventListener('click', function(){
       document.getElementById('loginMsg').textContent = '後四碼不正確，請再確認';
     }
   }, function(){
-    btn.disabled = false; btn.textContent = '登　入';
+    btn.disabled = false; btn.textContent = '登 入';
     lf.classList.add('bad');
     document.getElementById('loginMsg').textContent = '連線錯誤，請再試一次';
   });
@@ -883,17 +900,26 @@ function enterForm(record){
     state.lastAddr  = record.address || '';
   }
 
-  // 金額改登入後單獨查詢（首頁不載入）
+  // 金額改登入後單獨查詢
   state.goods = 0;
+  state.memberDiscount = 0; 
   state.otherList = [];
   state.otherTotal = 0;
+  state.otherDiscountTotal = 0;
+  state.dropshipLocked = false;
+  
   document.getElementById('amountBox').classList.add('hide');
   var _od=document.getElementById('orderDetail'); _od.innerHTML=''; _od.classList.add('hide');
+  
   jsonp({ action: 'myOrder', group: group, nickname: state.nick }, function(res){
     if (res.ok && res.data){
       state.goods = res.data.goods || 0;
-      state.otherList = (res.data.others || []).map(function(o){ return { g:o.g, a:o.a }; });
+      state.memberDiscount = res.data.memberDiscount || 0; 
+      
+      state.otherList = (res.data.others || []).map(function(o){ return { g:o.g, a:o.a, d:o.d || 0 }; });
       state.otherTotal = state.otherList.reduce(function(s,o){ return s + o.a; }, 0);
+      state.otherDiscountTotal = state.otherList.reduce(function(s,o){ return s + o.d; }, 0); 
+      
       renderOrderDetail(group, res.data);
       applyDropship();
     }
@@ -927,7 +953,7 @@ function applyDropship(){
     });
     box.classList.remove('hide');
     document.getElementById('shipRuleHint').style.display = 'none';
-    state.dropshipLocked = true;
+    state.dropshipLocked = true; // ★ 鎖定廠商直寄狀態，在切換時隱藏湊免運
     triggerDelivery('宅配');
   } else {
     // 未達標：全部取貨方式正常顯示
@@ -1014,6 +1040,18 @@ function hidePaid(){
   document.getElementById('paidBox').classList.add('hide');
 }
 
+/* ---------- 晚點出貨選項 ---------- */
+document.getElementById('delayShipChk').addEventListener('change', function(){
+  var dateField = document.getElementById('f-delayDate');
+  if (this.checked) {
+    dateField.classList.remove('hide');
+  } else {
+    dateField.classList.add('hide');
+    document.getElementById('delayDate').value = '';
+    dateField.classList.remove('bad');
+  }
+});
+
 /* ---------- 取貨方式 ---------- */
 bindRadios('deliveryBox', function(v){ deliveryChange(v); });
 
@@ -1045,13 +1083,13 @@ function deliveryChange(v){
     self.classList.remove('hide');
   }
 
-  // 湊免運勾選：只在交貨便/宅配出現（自取、自行提供本來就免運）
+  // ★ 湊免運勾選：只在交貨便/宅配出現，且未觸發「廠商直寄 (dropshipLocked)」條件
   var pool = document.getElementById('poolshipBox');
   if ((v === '交貨便' || v === '宅配') && !state.dropshipLocked){
     pool.classList.remove('hide');
   } else {
     pool.classList.add('hide');
-    document.getElementById('poolshipChk').checked = false;
+    document.getElementById('poolshipChk').checked = false; // 強制取消勾選
   }
 
   state.delivery = v;
@@ -1110,12 +1148,18 @@ function recalc(){
     shipping = rule.fee;                // 沒勾湊免運又未達標，直接加運費
   }
 
-  // 優惠折抵（只折商品，刷卡不適用）
+  // 1. 專屬手動折扣 (有合併就把其他團的手動折扣也加進來)
+  var manualDiscount = state.memberDiscount + (merge ? state.otherDiscountTotal : 0);
+
+  // 2. 團別優惠折抵（只折商品，刷卡不適用）
   var payChecked = document.querySelector('input[name=pay]:checked');
   var isCard = payChecked && payChecked.value === '信用卡';
-  var discount = isCard ? 0 : calcDiscount(goods);
+  var groupDiscount = isCard ? 0 : calcDiscount(goods);
 
-  var total = goods - discount + shipping;
+  // 3. 總折扣 = 手動折扣 + 團別折扣
+  var discount = manualDiscount + groupDiscount;
+
+  var total = Math.max(0, goods - discount + shipping); // 確保應付金額不會變成負數
 
   document.getElementById('goodsVal').textContent = goods.toLocaleString();
   document.getElementById('totalVal').textContent = total.toLocaleString();
@@ -1174,7 +1218,7 @@ function recalc(){
   var ub = document.getElementById('unpaidBox');
   if (state.otherList.length > 0 && !merge){
     var listHtml = state.otherList.map(function(o){
-      return '・' + o.g + '　$' + o.a.toLocaleString();
+      return '・' + o.g + ' $' + o.a.toLocaleString();
     }).join('<br>');
     ub.innerHTML = '⚠️ 未勾選合併，以下 <b>' + state.otherList.length +
       '</b> 團請記得分別回報：<br>' + listHtml;
@@ -1189,9 +1233,12 @@ function recalc(){
 }
 
 function resetAmount(){
-  state = { nick: '', delivery: state.delivery, goods: 0, otherTotal: 0, otherList: [] };
+  state = { nick: '', delivery: state.delivery, dropshipLocked: false, goods: 0, memberDiscount: 0, otherTotal: 0, otherDiscountTotal: 0, otherList: [] };
   document.getElementById('amountBox').classList.add('hide');
   document.getElementById('mergeChk').checked = false;
+  document.getElementById('delayShipChk').checked = false;
+  document.getElementById('f-delayDate').classList.add('hide');
+  document.getElementById('delayDate').value = '';
 }
 
 /* ---------- 單選共用 ---------- */
@@ -1283,7 +1330,7 @@ function validate(){
   var problems = [];  // 收集缺漏項目，最後給明確提示
 
   // 先清掉所有紅框
-  ['f-name','f-phone','f-delivery','f-store','f-addr','f-pay','f-payInfo']
+  ['f-name','f-phone','f-delivery','f-store','f-addr','f-pay','f-payInfo', 'f-delayDate']
     .forEach(function(id){
       var el = document.getElementById(id);
       if (el) el.classList.remove('bad');
@@ -1309,7 +1356,6 @@ function validate(){
   } else if (dv.value === '宅配') {
     if (!document.getElementById('addr').value.trim()) fail('f-addr', '收件地址');
   }
-  // 自取不需填門市或地址
 
   var pv = document.querySelector('input[name=pay]:checked');
   if (!pv) {
@@ -1322,6 +1368,13 @@ function validate(){
       if (!pi) fail('f-payInfo', 'LINE Pay 名字');
     } else {
       if (!/^\d{5}$/.test(pi)) fail('f-payInfo', '帳號後五碼（需5位數字）');
+    }
+  }
+
+  // ★ 驗證晚點出貨的日期
+  if (document.getElementById('delayShipChk').checked) {
+    if (!document.getElementById('delayDate').value.trim()) {
+      fail('f-delayDate', '指定出貨日期');
     }
   }
 
@@ -1350,10 +1403,19 @@ document.getElementById('submitBtn').addEventListener('click', function(){
   btn.textContent = '送出中…';
 
   var nick = state.nick;
-
   var dv = document.querySelector('input[name=delivery]:checked').value;
   var pv = document.querySelector('input[name=pay]:checked').value;
   var c = state.calc || { merge:false, goods:0, shipping:0, total:0 };
+
+  // ★ 將晚點出貨的資訊打包進備註
+  var rawNote = document.getElementById('note').value.trim();
+  var finalNote = rawNote;
+  var delayChecked = document.getElementById('delayShipChk').checked;
+  var delayDate = document.getElementById('delayDate').value.trim();
+  
+  if (delayChecked && delayDate) {
+    finalNote = '【晚點出貨】指定日期：' + delayDate + (rawNote ? '\n' + rawNote : '');
+  }
 
   var payload = {
     group: curGroup ? curGroup.name : document.getElementById('group').value,
@@ -1373,7 +1435,7 @@ document.getElementById('submitBtn').addEventListener('click', function(){
     discount: c.discount,
     shipping: c.shipping,
     amount: c.total,
-    note: document.getElementById('note').value.trim()
+    note: finalNote // ★ 送出組合好的備註
   };
 
   jsonp({ action: 'submit', payload: JSON.stringify(payload) }, function(res){
