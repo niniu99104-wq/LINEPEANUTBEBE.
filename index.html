@@ -52,7 +52,6 @@
     padding:24px 20px; box-shadow:var(--shadow); margin-bottom: 20px;
   }
 
-  /* 雙模式選擇按鈕 */
   .mode-box { display: flex; gap: 12px; margin-bottom: 20px; }
   .mode-btn {
     flex: 1; padding: 22px 12px; border-radius: var(--r); background: #fff;
@@ -90,20 +89,17 @@
     background-repeat:no-repeat; background-position:right 15px center; padding-right:38px;
   }
 
-  /* 逾期關閉卡片 */
   .expired-box{ background:linear-gradient(160deg,#fdf0ed,#fbe4e0); border-radius:var(--r); padding:26px 20px; text-align:center; margin-bottom:20px; }
   .expired-box .icon{font-size:40px;line-height:1;margin-bottom:10px;}
   .expired-box .title{font-size:16px;font-weight:700;color:var(--err);letter-spacing:1px;}
   .expired-box .sub{font-size:13.5px;color:var(--ink-soft);margin-top:8px;line-height:1.7;}
 
-  /* 已完成結帳 */
   .paid-box{ background:linear-gradient(160deg,var(--ok-soft),#e0f2e8); border-radius:var(--r); padding:26px 20px;text-align:center; margin-bottom:20px; }
   .paid-box .paid-tick{font-size:40px;line-height:1;margin-bottom:10px;}
   .paid-box .paid-title{font-size:18px;font-weight:700;color:var(--ok);letter-spacing:1px;}
   .paid-box .paid-sub{font-size:13px;color:#6a9a84;margin-top:6px;line-height:1.7;}
 
   .last4-input{ text-align:center;letter-spacing:12px;font-size:24px;font-weight:600; padding-left:12px; }
-
   .hide{display:none !important;}
 
   .btn{
@@ -121,7 +117,6 @@
   .field.bad input,.field.bad select,.field.bad textarea{border-color:var(--err);background:#fdf3f1;}
   .field.bad .err-msg{display:block;}
 
-  /* 歡迎列 */
   .welcome-bar{
     display:flex;align-items:center;gap:13px; background:linear-gradient(155deg,#fff6ee 0%,#fbe8db 100%);
     border-radius:var(--r); padding:15px 17px;margin-bottom:24px; box-shadow:var(--shadow-soft);
@@ -130,6 +125,33 @@
   .welcome-text{min-width:0;}
   .welcome-hi{font-size:11.5px;color:var(--accent-deep);letter-spacing:2px;font-weight:600;opacity:.75;}
   .welcome-name{ font-size:16px;font-weight:700;color:var(--ink);letter-spacing:.5px; white-space:nowrap;overflow:hidden;text-overflow:ellipsis; margin:1px 0 3px; }
+
+  /* 湊免運進度區 */
+  .pool-progress-box {
+    background: linear-gradient(160deg, #fff8ef, #fdefe0);
+    border: 1.5px dashed #f0d9c0;
+    border-radius: var(--r-sm);
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .pool-progress-title {
+    font-weight: 700;
+    color: var(--accent-deep);
+    font-size: 15px;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+  .pool-progress-desc {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .pool-progress-highlight {
+    color: var(--err);
+    font-weight: 700;
+    font-size: 15px;
+  }
 
   /* 查詢結果卡片 */
   .q-card { background: #fff; border: 1.5px solid var(--line); border-radius: var(--r-sm); margin-bottom: 12px; overflow: hidden; }
@@ -140,10 +162,13 @@
   .tag-pay-no { background: #fdf0ed; color: var(--err); }
   .tag-pay-yes { background: var(--ok-soft); color: var(--ok); }
   .tag-pay-share { background: #eff3f6; color: #5a768e; }
-  .tag-ship-0 { background: #f2f2f2; color: var(--ship-gray); } /* 未到貨/未處理 */
-  .tag-ship-1 { background: #eef5fd; color: var(--ship-blue); } /* 已到貨 */
-  .tag-ship-2 { background: #fdf6ec; color: var(--ship-yellow); } /* 待湊免運 */
-  .tag-ship-3 { background: var(--ok-soft); color: var(--ok); } /* 已出貨 */
+  
+  .tag-ship-0 { background: #f2f2f2; color: var(--ship-gray); } 
+  .tag-ship-4 { background: #f9f0ff; color: #9453cc; } 
+  .tag-ship-1 { background: #eef5fd; color: var(--ship-blue); } 
+  .tag-ship-2 { background: #fdf6ec; color: var(--ship-yellow); } 
+  .tag-ship-3 { background: var(--ok-soft); color: var(--ok); } 
+  
   .q-item { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-soft); padding: 4px 0; }
   .q-item .qty { color: var(--muted); flex-shrink: 0; margin-left: 10px; }
   .q-amount { text-align: right; margin-top: 10px; font-size: 14px; font-weight: 700; color: var(--amount); }
@@ -153,7 +178,6 @@
   .toast{ position:fixed;left:50%;bottom:30px;transform:translateX(-50%); background:rgba(58,51,48,.95);color:#fff; padding:12px 24px;border-radius:24px;font-size:13.5px; opacity:0;pointer-events:none;transition:opacity .25s;z-index:99; }
   .toast.on{opacity:1;}
   
-  /* 其他保留的樣式... (為節省長度，部分細節樣式已合併，不影響功能) */
   .radios{display:flex;gap:10px;} #deliveryBox{flex-wrap:wrap;} #deliveryBox label{flex:1 1 calc(50% - 5px);}
   .radios label{ flex:1;margin:0; border:1.5px solid var(--line);border-radius:var(--r-sm); padding:13px 6px;text-align:center;cursor:pointer; font-weight:500;font-size:14px; color:var(--ink-soft);background:var(--bg2); }
   .radios input{position:absolute;opacity:0;pointer-events:none;}
@@ -279,7 +303,7 @@
     <button class="btn btn-ghost" id="regBackBtn">返回</button>
   </div>
 
-  <!-- ③ 付款回報表單 (原版內容，已做樣式精簡) -->
+  <!-- ③ 付款回報表單 -->
   <div id="formCard" class="card hide">
     <div class="welcome-bar" id="welcomeBar"></div>
 
@@ -337,7 +361,7 @@
 
   <!-- 完成頁 -->
   <div id="doneCard" class="card done hide">
-    <div class="tick">✓</div><h2>回報完成！</h2>
+    <div class="tick">✓</div><h2 id="doneTitle">回報完成！</h2>
     <div class="sub">請複製下方內容貼回給土豆媽 😊</div>
     <div class="copybox" id="resultText"></div>
     <button class="btn" id="copyBtn">複製內容</button>
@@ -350,9 +374,16 @@
 <script>
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxtM_cYFh4J-c-CHLzYELXMSZ4Jf1QOornsPM0sOEFpGsElzKY1uBzPO8FFcevvHmof/exec';
 
+// ========================================
+// ★ 設定免運門檻
+// ========================================
+var STORE_FREE_TARGET = 1500; // 超商免運門檻
+var HOME_FREE_TARGET = 2000;  // 宅配免運門檻
+// ========================================
+
 var DATA = { groups: [], members: {}, allNames: [], bank: [] };
 var curGroup = null;
-var state = { mode: '', nick: '', delivery: '', goods: 0, otherTotal: 0, otherList: [] };
+var state = { mode: '', nick: '', delivery: '', goods: 0, otherTotal: 0, otherList: [], customer: {} };
 
 function jsonp(params, onOk, onErr){
   var cb = 'cb_' + Date.now() + Math.floor(Math.random()*1e6);
@@ -366,13 +397,11 @@ function jsonp(params, onOk, onErr){
   document.head.appendChild(script);
 }
 
-// 1. 載入
 function loadInit(attempt){
   jsonp({action:'init'}, function(res){
     if(!res.ok){ document.getElementById('loading').textContent = '載入失敗'; return; }
     DATA = res.data;
     
-    // 結帳團別選單
     var gSel = document.getElementById('group');
     gSel.innerHTML = '<option value="">請選擇</option>';
     DATA.groups.forEach(function(g){
@@ -381,7 +410,6 @@ function loadInit(attempt){
       gSel.appendChild(o);
     });
 
-    // 查詢暱稱選單 (全部註冊名單)
     var qSel = document.getElementById('queryNick');
     qSel.innerHTML = '<option value="">請選擇</option>';
     DATA.allNames.forEach(function(n){
@@ -398,7 +426,6 @@ function loadInit(attempt){
 }
 loadInit(1);
 
-// 2. 雙模式切換
 document.getElementById('btnModeCheckout').addEventListener('click', function(){
   state.mode = 'checkout';
   document.getElementById('modeSelectCard').classList.add('hide');
@@ -419,7 +446,6 @@ function backToMode(){
   document.getElementById('headSub').textContent = '請選擇您需要的功能 🙏';
 }
 
-/* ================= 模式 A：結帳 ================= */
 document.getElementById('group').addEventListener('change', function(){
   var g = this.value;
   curGroup = DATA.groups.filter(function(x){ return x.name === g; })[0] || null;
@@ -474,7 +500,6 @@ document.getElementById('loginBtn').addEventListener('click', function(){
   });
 });
 
-/* ================= 模式 B：查詢 ================= */
 document.getElementById('queryNick').addEventListener('change', function(){
   state.nick = this.value;
   if(state.nick){
@@ -493,12 +518,19 @@ document.getElementById('queryBtn').addEventListener('click', function(){
   
   jsonp({action:'queryOrders', nickname:state.nick, last4:last4}, function(res){
     btn.disabled=false; btn.textContent='查詢進度';
-    if(res.status==='ok') renderQuery(res.data);
+    if(res.status==='ok') {
+      state.customer = res.data; // 儲存顧客資料給湊免運表單使用
+      renderQuery(res);
+    }
     else toast('後四碼錯誤或無資料');
   });
 });
 
-function renderQuery(orders){
+// ★ 查詢結果與湊免運介面渲染
+function renderQuery(resPayload){
+  var orders = resPayload.data || [];
+  var cus = resPayload.customer || {};
+
   document.getElementById('queryLoginCard').classList.add('hide');
   document.getElementById('queryResultCard').classList.remove('hide');
   document.getElementById('headSub').textContent = '以下是您的歷史訂單與進度 😊';
@@ -514,12 +546,19 @@ function renderQuery(orders){
   }
 
   var html = '';
+  var poolSum = 0;
+  var hasPool = false;
+
   orders.forEach(function(o){
     var payClass = o.payStatus === '未付' ? 'tag-pay-no' : (o.payStatus === '待算退分潤' ? 'tag-pay-share' : 'tag-pay-yes');
-    
     var shipClass = 'tag-ship-0';
-    if(o.shipStatus === '已到貨') shipClass = 'tag-ship-1';
-    else if(o.shipStatus === '已到貨，待湊免運商品' || o.shipStatus === '待湊免運') shipClass = 'tag-ship-2';
+    if(o.shipStatus === '訂單處理中') shipClass = 'tag-ship-4';
+    else if(o.shipStatus === '已到貨') shipClass = 'tag-ship-1';
+    else if(o.shipStatus === '已到貨，待湊免運商品' || o.shipStatus === '待湊免運') {
+      shipClass = 'tag-ship-2';
+      hasPool = true;
+      poolSum += (o.amount || 0); // 累計湊免運金額
+    }
     else if(o.shipStatus === '已出貨') shipClass = 'tag-ship-3';
     
     var shipText = o.shipStatus || '未處理';
@@ -540,13 +579,380 @@ function renderQuery(orders){
         '<div class="q-amount">應付 $'+ o.amount.toLocaleString() +'</div>' +
       '</div></div>';
   });
+
+  // ★ 插入湊免運進度區塊
+  if(hasPool) {
+    var poolHtml = '';
+    
+    // 狀況1: 未達最低門檻 (超商1500)
+    if(poolSum < STORE_FREE_TARGET) {
+      var gap = STORE_FREE_TARGET - poolSum;
+      poolHtml = '<div class="pool-progress-box">' +
+        '<div class="pool-progress-title">🚚 湊免運進度</div>' +
+        '<div class="pool-progress-desc">目前累積金額：$' + poolSum.toLocaleString() + '<br>' +
+        '差 <span class="pool-progress-highlight">$' + gap.toLocaleString() + '</span> 免運，快去看看還有什麼好物～<br><br>' +
+        '<span style="font-size:12.5px;color:var(--muted);">未湊滿免運要提前出貨請私訊土豆媽官方帳號為您處理❤️</span></div>' +
+      '</div>';
+    } 
+    // 狀況2: 達到免運門檻，讓客人點選出貨
+    else {
+      var isForceHome = poolSum >= HOME_FREE_TARGET;
+      var methodHtml = '';
+      if(isForceHome) {
+        methodHtml = '<div style="color:var(--err); font-size:13.5px; margin-bottom:12px; font-weight:600; line-height:1.6;">⚠️ 累積金額達 $'+poolSum.toLocaleString()+'，因體積限制將統一採用「宅配」為您出貨。</div>' +
+                     '<input type="hidden" id="poolDelivery" value="宅配">';
+      } else {
+        methodHtml = '<div class="radios" style="margin-bottom:15px;" id="poolDelBox">' +
+          '<label data-v="交貨便" class="on"><input type="radio" name="p_del" value="交貨便" checked>交貨便</label>' +
+          '<label data-v="宅配"><input type="radio" name="p_del" value="宅配">宅配</label>' +
+        '</div>';
+      }
+
+      var preName = escapeHtml(cus.name || '');
+      var prePhone = escapeHtml(cus.phone || '');
+      var preStore = escapeHtml(cus.store || '');
+      var preAddr = escapeHtml(cus.address || '');
+
+      poolHtml = '<div class="pool-progress-box" style="text-align:left; border:1.5px solid var(--accent); background:#fff;">' +
+        '<div class="pool-progress-title" style="text-align:center; color:var(--amount); font-size:17px;">🎉 恭喜已達免運門檻！</div>' +
+        '<div class="pool-progress-desc" style="text-align:center; margin-bottom:18px; color:var(--ink);">目前累積湊單：<b>$' + poolSum.toLocaleString() + '</b></div>' +
+        '<div style="font-size:13.5px; font-weight:600; color:var(--ink-soft); margin-bottom:10px;">請確認出貨資訊並送出通知：</div>' +
+        methodHtml +
+        '<div class="field" style="margin-bottom:12px;"><input type="text" id="poolName" placeholder="收件人姓名" value="'+preName+'"></div>' +
+        '<div class="field" style="margin-bottom:12px;"><input type="tel" id="poolPhone" placeholder="收件人電話" value="'+prePhone+'"></div>' +
+        '<div class="field" id="poolStoreF" style="margin-bottom:12px;'+(isForceHome?'display:none;':'')+'"><input type="text" id="poolStore" placeholder="請填寫交貨便門市名稱" value="'+preStore+'"></div>' +
+        '<div class="field" id="poolAddrF" style="margin-bottom:12px;'+(isForceHome?'':'display:none;')+'"><textarea id="poolAddr" placeholder="請填寫宅配收件地址">'+preAddr+'</textarea></div>' +
+        '<button class="btn" style="margin-top:10px;" id="btnGenPool">確認資訊並通知出貨</button>' +
+      '</div>';
+    }
+    html = poolHtml + html;
+  }
+
   list.innerHTML = html;
+
+  // ★ 綁定湊免運出貨表單的按鈕功能
+  if(hasPool && poolSum >= STORE_FREE_TARGET) {
+    var isForceHome = poolSum >= HOME_FREE_TARGET;
+    
+    if(!isForceHome) {
+      bindRadios('poolDelBox', function(v){
+        if(v==='交貨便'){
+          document.getElementById('poolStoreF').style.display='';
+          document.getElementById('poolAddrF').style.display='none';
+        } else {
+          document.getElementById('poolStoreF').style.display='none';
+          document.getElementById('poolAddrF').style.display='';
+        }
+      });
+    }
+
+    document.getElementById('btnGenPool').addEventListener('click', function(){
+      var method = isForceHome ? '宅配' : document.querySelector('input[name=p_del]:checked').value;
+      var name = document.getElementById('poolName').value.trim();
+      var phone = document.getElementById('poolPhone').value.trim();
+      var addr = method === '交貨便' ? document.getElementById('poolStore').value.trim() : document.getElementById('poolAddr').value.trim();
+      
+      if(!name || !phone || !addr) return toast('請填寫完整收件資料');
+      
+      var text = '【湊免運出貨通知】\n' +
+                 '暱稱：' + state.nick + '\n' +
+                 '累積金額：$' + poolSum.toLocaleString() + '\n' +
+                 '收件人：' + name + '\n' +
+                 '電話：' + phone + '\n' +
+                 '寄送方式：' + method + '\n' +
+                 (method==='交貨便' ? '門市：' : '地址：') + addr + '\n' +
+                 '備註：已達免運門檻，請幫我安排出貨，謝謝！';
+                 
+      document.getElementById('queryResultCard').classList.add('hide');
+      document.getElementById('doneTitle').textContent = '通知單產生成功！';
+      document.getElementById('resultText').textContent = text;
+      document.getElementById('doneCard').classList.remove('hide');
+      window.scrollTo(0,0);
+    });
+  }
 }
 
-/* ================= 以下為結帳表單原有邏輯 ================= */
-function goRegister(nick){ /* 略，見原碼 */ }
-function enterForm(record){ /* 略，呼叫myOrder並顯示formCard，邏輯與舊版同 */ }
+function goRegister(nick){
+  document.getElementById('loginCard').classList.add('hide');
+  document.getElementById('registerCard').classList.remove('hide');
+  document.getElementById('regNick').value = nick;
+  document.getElementById('regName').value = '';
+  document.getElementById('regPhone').value = '';
+  document.getElementById('headSub').textContent = '初次使用，請先建立您的資料 🌱';
+  window.scrollTo(0,0);
+}
+
+document.getElementById('regBackBtn').addEventListener('click', function(){
+  document.getElementById('registerCard').classList.add('hide');
+  document.getElementById('loginCard').classList.remove('hide');
+  document.getElementById('headSub').textContent = '請選擇團別並輸入電話後四碼登入查詢 🙏';
+  document.getElementById('nickname').value = '';
+  window.scrollTo(0,0);
+});
+
+document.getElementById('regBtn').addEventListener('click', function(){
+  var name = document.getElementById('regName').value.trim();
+  var phone = document.getElementById('regPhone').value.trim();
+  var okName = !!name;
+  var okPhone = /^09\d{8}$/.test(phone);
+  document.getElementById('rf-name').classList.toggle('bad', !okName);
+  document.getElementById('rf-phone').classList.toggle('bad', !okPhone);
+  if(!okName || !okPhone) return;
+
+  var btn = this; btn.disabled = true; btn.textContent = '建檔中…';
+  jsonp({action:'register', payload:JSON.stringify({nickname:state.nick, name:name, phone:phone})}, function(res){
+    btn.disabled = false; btn.textContent = '建檔並開始';
+    if(res.ok) { document.getElementById('registerCard').classList.add('hide'); enterForm(res.data); }
+    else toast(res.msg);
+  }, function(){ btn.disabled = false; btn.textContent = '建檔並開始'; toast('連線錯誤'); });
+});
+
+function enterForm(record){
+  var group = curGroup ? curGroup.name : '';
+  document.getElementById('loginCard').classList.add('hide');
+  document.getElementById('registerCard').classList.add('hide');
+  document.getElementById('formCard').classList.remove('hide');
+  document.getElementById('headSub').textContent = '確認金額，填寫並完成匯款後送出 🙏';
+  document.getElementById('doneTitle').textContent = '回報完成！';
+
+  var wb = document.getElementById('welcomeBar');
+  var displayNick = state.nick.split(/[\/／@＠]/)[0].trim() || state.nick;
+  wb.innerHTML = '<div class="welcome-avatar">' + (displayNick.charAt(0)||'👋') + '</div>' +
+    '<div class="welcome-text"><div class="welcome-hi">歡迎回來</div><div class="welcome-name">' + escapeHtml(displayNick) + '</div><div class="welcome-group">' + escapeHtml(group) + '</div></div>';
+
+  var box = document.getElementById('payBox'); box.innerHTML = '';
+  var pays = curGroup ? curGroup.pays : ['匯款'];
+  pays.forEach(function(p){
+    var lab = document.createElement('label'); lab.setAttribute('data-v', p);
+    lab.innerHTML = '<input type="radio" name="pay" value="'+p+'">' + (p==='LINEPAY'?'LINE Pay':p==='信用卡'?'信用卡':'銀行轉帳／ATM');
+    box.appendChild(lab);
+  });
+  document.getElementById('f-pay').classList.remove('hide');
+  document.getElementById('f-payInfo').classList.add('hide');
+  document.getElementById('bankBox').classList.add('hide');
+  bindRadios('payBox', onPayChange);
+  if(pays.length===1){ box.querySelector('input').checked=true; box.querySelector('label').classList.add('on'); onPayChange(pays[0]); }
+
+  if(record){
+    if(record.name) document.getElementById('name').value = record.name;
+    if(record.phone) document.getElementById('phone').value = record.phone;
+    state.lastStore = record.store || ''; state.lastAddr = record.address || '';
+  }
+
+  state.goods = 0; state.memberDiscount = 0; state.otherList = []; state.otherTotal = 0; state.otherDiscountTotal = 0; state.dropshipLocked = false;
+  document.getElementById('amountBox').classList.add('hide');
+  document.getElementById('orderDetail').innerHTML=''; document.getElementById('orderDetail').classList.add('hide');
+  
+  jsonp({action:'myOrder', group:group, nickname:state.nick}, function(res){
+    if(res.ok && res.data){
+      state.goods = res.data.goods || 0; state.memberDiscount = res.data.memberDiscount || 0; 
+      state.otherList = (res.data.others || []).map(function(o){ return {g:o.g, a:o.a, d:o.d||0}; });
+      state.otherTotal = state.otherList.reduce(function(s,o){ return s+o.a; }, 0);
+      state.otherDiscountTotal = state.otherList.reduce(function(s,o){ return s+o.d; }, 0); 
+      renderOrderDetail(group, res.data); applyDropship();
+    }
+    recalc();
+  }, function(){ recalc(); });
+  window.scrollTo(0,0);
+}
+
+function applyDropship(){
+  var box = document.getElementById('dropshipBox');
+  var th = (curGroup && curGroup.dropship > 0) ? curGroup.dropship : 0;
+  var reached = th > 0 && (state.goods || 0) >= th;
+  var labels = document.querySelectorAll('#deliveryBox label');
+
+  if(reached){
+    labels.forEach(function(lab){
+      if(lab.getAttribute('data-v') === '宅配'){ lab.style.display = ''; lab.classList.add('on'); lab.querySelector('input').checked = true; }
+      else { lab.style.display = 'none'; lab.classList.remove('on'); lab.querySelector('input').checked = false; }
+    });
+    box.classList.remove('hide'); state.dropshipLocked = true; triggerDelivery('宅配');
+  } else {
+    state.dropshipLocked = false; labels.forEach(function(lab){ lab.style.display = ''; });
+    box.classList.add('hide');
+  }
+}
+
+function triggerDelivery(v){
+  var lab = document.querySelector('#deliveryBox label[data-v="' + v + '"]');
+  if(!lab) return;
+  document.querySelectorAll('#deliveryBox label').forEach(function(l){ l.classList.remove('on'); });
+  lab.classList.add('on'); lab.querySelector('input').checked = true;
+  if(typeof deliveryChange === 'function') deliveryChange(v);
+}
+
+function renderOrderDetail(group, data){
+  var box = document.getElementById('orderDetail'); var cards = [];
+  cards.push(odCard(group, data.goods||0, data.items||[], true, '本團'));
+  (data.others || []).forEach(function(o){ cards.push(odCard(o.g, o.a||0, o.items||[], false, '其他團')); });
+  box.innerHTML = cards.join(''); box.classList.remove('hide');
+  box.querySelectorAll('.od-head').forEach(function(h){ h.addEventListener('click', function(){ h.parentNode.classList.toggle('open'); }); });
+}
+
+function odCard(gName, sum, items, open, tag){
+  var body = items.length>0 ? items.map(function(it){
+    return '<div class="od-item"><span>' + escapeHtml(it.name) + (it.spec?' <span style="color:var(--muted);font-size:12px;">'+escapeHtml(it.spec)+'</span>':'') + '</span><span class="qty">×' + it.qty + '&nbsp;&nbsp;$' + (it.sub||0).toLocaleString() + '</span></div>';
+  }).join('') : '<div style="padding:12px 15px;color:var(--muted);font-size:13px;">（此團無明細）</div>';
+  return '<div class="od-card'+(open?' open':'')+'"><div class="od-head"><b style="color:var(--accent);font-size:13px;margin-right:6px;">['+tag+']</b><span style="flex:1;font-size:14px;font-weight:600;">'+escapeHtml(gName)+'</span><span style="font-weight:700;color:var(--amount);">$' + sum.toLocaleString() + '</span></div><div class="od-body">' + body + '</div></div>';
+}
+
 function escapeHtml(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+bindRadios('deliveryBox', deliveryChange);
+function deliveryChange(v){
+  var s = document.getElementById('f-store'); var a = document.getElementById('f-addr');
+  var pk = document.getElementById('pickupBox'); var self = document.getElementById('selfShipBox');
+  s.classList.add('hide'); a.classList.add('hide'); pk.classList.add('hide'); self.classList.add('hide');
+  document.getElementById('store').value = ''; document.getElementById('addr').value = '';
+
+  if(v==='交貨便'){ s.classList.remove('hide'); if(state.lastStore) document.getElementById('store').value = state.lastStore; }
+  else if(v==='宅配'){ a.classList.remove('hide'); if(state.lastAddr) document.getElementById('addr').value = state.lastAddr; }
+  else if(v==='自取') pk.classList.remove('hide');
+  else if(v==='自行提供') self.classList.remove('hide');
+
+  var pool = document.getElementById('poolshipBox');
+  if((v==='交貨便'||v==='宅配') && !state.dropshipLocked) pool.classList.remove('hide');
+  else { pool.classList.add('hide'); document.getElementById('poolshipChk').checked = false; }
+  state.delivery = v; recalc();
+}
+
+document.getElementById('poolshipChk').addEventListener('change', recalc);
+document.getElementById('mergeChk').addEventListener('change', recalc);
+
+var SHIP_RULE = { '交貨便': { threshold: STORE_FREE_TARGET, fee: 60 }, '宅配': { threshold: HOME_FREE_TARGET, fee: 100 }, '自取': { threshold: 0, fee: 0 }, '自行提供': { threshold: 0, fee: 0 } };
+
+function calcDiscount(goods){
+  if(!curGroup || !curGroup.discount) return 0;
+  var d = String(curGroup.discount).trim();
+  if(d.indexOf('%') > -1) return Math.round(goods * (1 - parseFloat(d)/100));
+  var num = parseFloat(d);
+  if(num > 0 && num < 1) return Math.round(goods * (1 - num));
+  return Math.min(Math.round(num), goods);
+}
+
+function recalc(){
+  if(!state.nick || !state.delivery){ document.getElementById('amountBox').classList.add('hide'); return; }
+  var merge = document.getElementById('mergeChk').checked && state.otherList.length>0;
+  var goods = state.goods + (merge ? state.otherTotal : 0);
+  var pool = document.getElementById('poolshipChk').checked && (state.delivery==='交貨便'||state.delivery==='宅配');
+  var rule = SHIP_RULE[state.delivery] || {threshold:0,fee:0};
+  var freeShip = curGroup && curGroup.freeShip;
+  var th = (curGroup && curGroup.freeThreshold>0) ? curGroup.freeThreshold : rule.threshold;
+  var reachFree = freeShip || goods >= th;
+  var shipping=0, poolPending=false;
+
+  if(reachFree) shipping=0;
+  else if(pool) { shipping=0; poolPending=true; }
+  else shipping = rule.fee;
+
+  var manualD = state.memberDiscount + (merge ? state.otherDiscountTotal : 0);
+  var payC = document.querySelector('input[name=pay]:checked');
+  var isCard = payC && payC.value === '信用卡';
+  var groupD = isCard ? 0 : calcDiscount(goods);
+  var discount = manualD + groupD;
+  var total = Math.max(0, goods - discount + shipping);
+
+  document.getElementById('goodsVal').textContent = goods.toLocaleString();
+  document.getElementById('totalVal').textContent = total.toLocaleString();
+
+  var dRow = document.getElementById('discountRow');
+  if(discount>0){ document.getElementById('discountVal').innerHTML = '<span class="off">-$'+discount.toLocaleString()+'</span>'; dRow.classList.remove('hide'); }
+  else dRow.classList.add('hide');
+
+  var sVal = document.getElementById('shipVal');
+  if(poolPending) sVal.innerHTML = '<span class="pending">待湊滿</span>';
+  else if(shipping===0) sVal.innerHTML = '<span class="free">免運 $0</span>';
+  else sVal.textContent = '$' + shipping;
+
+  var mBox = document.getElementById('mergeBox');
+  if(state.otherList.length>0){
+    document.getElementById('mergeDesc').innerHTML = '另有 ' + state.otherList.length + ' 團未付，合計 $' + state.otherTotal.toLocaleString();
+    mBox.classList.remove('hide');
+  } else mBox.classList.add('hide');
+
+  var ub = document.getElementById('unpaidBox');
+  if(state.otherList.length>0 && !merge){
+    ub.innerHTML = '⚠️ 未勾選合併，另有 <b>' + state.otherList.length + '</b> 團請記得分別回報';
+    ub.classList.remove('hide');
+  } else ub.classList.add('hide');
+
+  document.getElementById('amountBox').classList.remove('hide');
+  state.calc = { merge:merge, pool:pool, poolPending:poolPending, goods:goods, discount:discount, shipping:shipping, total:total };
+}
+
+function bindRadios(boxId, cb){
+  var box = document.getElementById(boxId);
+  box.querySelectorAll('label').forEach(function(lab){
+    lab.addEventListener('click', function(){
+      box.querySelectorAll('label').forEach(function(l){ l.classList.remove('on'); });
+      lab.classList.add('on'); lab.querySelector('input').checked = true; cb(lab.getAttribute('data-v'));
+    });
+  });
+}
+
+function onPayChange(v){
+  var f = document.getElementById('f-payInfo'); var lab = document.getElementById('payInfoLabel');
+  var inp = document.getElementById('payInfo'); var bankBox = document.getElementById('bankBox');
+  inp.value = '';
+  if(v==='信用卡'){
+    bankBox.classList.add('hide'); f.classList.remove('hide'); lab.innerHTML = '信用卡(不適用折抵)'; inp.classList.add('hide');
+  } else {
+    inp.classList.remove('hide'); f.classList.remove('hide');
+    if(v==='LINEPAY'){ bankBox.classList.add('hide'); lab.innerHTML = 'LINE Pay 名字<span class="req">*</span>'; inp.setAttribute('inputmode', 'text'); }
+    else { renderBank(); bankBox.classList.remove('hide'); lab.innerHTML = '帳號後五碼<span class="req">*</span>'; inp.setAttribute('inputmode', 'numeric'); }
+  }
+  recalc();
+}
+
+function renderBank(){
+  var list = document.getElementById('bankList'); if(list.dataset.done) return;
+  var html = ''; (DATA.bank||[]).forEach(function(b){ html += '<div class="bank-row"><span class="k">'+b.k+'</span><span class="v">'+b.v+'</span></div>'; });
+  list.innerHTML = html || '<div class="bank-row">無帳號資訊</div>'; list.dataset.done = '1';
+}
+
+document.getElementById('bankCopyBtn').addEventListener('click', function(){
+  var acc = (DATA.bank||[]).filter(function(b){ return b.k.indexOf('帳號')>-1; })[0];
+  if(acc) copyText(acc.v, '已複製帳號');
+});
+
+document.getElementById('submitBtn').addEventListener('click', function(){
+  var dv = document.querySelector('input[name=delivery]:checked');
+  var pv = document.querySelector('input[name=pay]:checked');
+  if(!document.getElementById('name').value || !document.getElementById('phone').value || !dv || !pv){ return toast('請填寫完整資料'); }
+  
+  var btn = this; btn.disabled = true; btn.textContent = '送出中…';
+  var c = state.calc;
+  var payload = {
+    group: document.getElementById('group').value, nickname: state.nick,
+    name: document.getElementById('name').value.trim(), phone: document.getElementById('phone').value.trim(),
+    delivery: dv.value, address: dv.value==='交貨便' ? document.getElementById('store').value.trim() : (dv.value==='宅配' ? document.getElementById('addr').value.trim() : ''),
+    payMethod: pv.value, payInfo: document.getElementById('payInfo').value.trim(),
+    merge: c.merge, pool: c.pool, poolPending: c.poolPending,
+    goods: c.goods, discount: c.discount, shipping: c.shipping, amount: c.total,
+    note: document.getElementById('note').value.trim()
+  };
+
+  jsonp({action:'submit', payload:JSON.stringify(payload)}, function(res){
+    if(res.ok){
+      document.getElementById('formCard').classList.add('hide');
+      document.getElementById('resultText').textContent = res.text;
+      document.getElementById('doneCard').classList.remove('hide'); window.scrollTo(0, 0);
+    } else { toast('失敗：'+res.msg); btn.disabled=false; btn.textContent='送出回報'; }
+  }, function(){ toast('連線錯誤'); btn.disabled=false; btn.textContent='送出回報'; });
+});
+
+function copyText(text, okMsg){
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function(){toast(okMsg);}).catch(function(){fallbackCopy(text,okMsg);});
+  else fallbackCopy(text, okMsg);
+}
+function fallbackCopy(text, okMsg){
+  var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); toast(okMsg); }catch(e){} document.body.removeChild(ta);
+}
+document.getElementById('copyBtn').addEventListener('click', function(){ copyText(document.getElementById('resultText').textContent, '已複製內容'); });
+
 function toast(msg){ var t = document.getElementById('toast'); t.textContent = msg; t.classList.add('on'); setTimeout(function(){ t.classList.remove('on'); }, 2200); }
 </script>
 </body>
