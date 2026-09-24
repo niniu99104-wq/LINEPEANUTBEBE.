@@ -135,23 +135,9 @@
     margin-bottom: 20px;
     text-align: center;
   }
-  .pool-progress-title {
-    font-weight: 700;
-    color: var(--accent-deep);
-    font-size: 15px;
-    margin-bottom: 8px;
-    letter-spacing: 1px;
-  }
-  .pool-progress-desc {
-    font-size: 14px;
-    color: var(--ink-soft);
-    line-height: 1.6;
-  }
-  .pool-progress-highlight {
-    color: var(--err);
-    font-weight: 700;
-    font-size: 15px;
-  }
+  .pool-progress-title { font-weight: 700; color: var(--accent-deep); font-size: 15px; margin-bottom: 8px; letter-spacing: 1px; }
+  .pool-progress-desc { font-size: 14px; color: var(--ink-soft); line-height: 1.6; }
+  .pool-progress-highlight { color: var(--err); font-weight: 700; font-size: 15px; }
 
   /* 查詢結果卡片 */
   .q-card { background: #fff; border: 1.5px solid var(--line); border-radius: var(--r-sm); margin-bottom: 12px; overflow: hidden; }
@@ -160,14 +146,16 @@
   .q-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
   .q-tag { font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 20px; letter-spacing: .5px; }
   .tag-pay-no { background: #fdf0ed; color: var(--err); }
-  .tag-pay-yes { background: var(--ok-soft); color: var(--ok); }
+  .tag-pay-yes { background: #e9f5ef; color: var(--ok); }
   .tag-pay-share { background: #eff3f6; color: #5a768e; }
   
   .tag-ship-0 { background: #f2f2f2; color: var(--ship-gray); } 
   .tag-ship-4 { background: #f9f0ff; color: #9453cc; } 
+  .tag-ship-5 { background: #e0f4f1; color: #288474; } 
+  .tag-ship-6 { background: #ece8e1; color: #665c54; } 
   .tag-ship-1 { background: #eef5fd; color: var(--ship-blue); } 
   .tag-ship-2 { background: #fdf6ec; color: var(--ship-yellow); } 
-  .tag-ship-3 { background: var(--ok-soft); color: var(--ok); } 
+  .tag-ship-3 { background: #e9f5ef; color: var(--ok); } 
   
   .q-item { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-soft); padding: 4px 0; }
   .q-item .qty { color: var(--muted); flex-shrink: 0; margin-left: 10px; }
@@ -216,7 +204,6 @@
 
   <div id="loading" class="card loading">載入中…</div>
 
-  <!-- 0️⃣ 模式選擇 -->
   <div id="modeSelectCard" class="card hide">
     <div class="mode-box">
       <div class="mode-btn" id="btnModeCheckout">
@@ -232,7 +219,6 @@
     </div>
   </div>
 
-  <!-- ① 結帳登入頁 -->
   <div id="loginCard" class="card hide">
     <div class="field" id="lf-group">
       <label>團別 - 品項<span class="req">*</span></label>
@@ -267,30 +253,27 @@
     <button class="btn btn-ghost" onclick="backToMode()">返回主選單</button>
   </div>
 
-  <!-- ①-B 查詢登入頁 -->
+  <!-- ①-B 查詢登入頁 (改為輸入姓名與電話後四碼) -->
   <div id="queryLoginCard" class="card hide">
-    <div class="field" id="qf-nick">
-      <label>您的 LINE 顯示名稱<span class="req">*</span></label>
-      <select id="queryNick"><option value="">請選擇</option></select>
-      <div class="err-msg">請選擇您的暱稱</div>
+    <div class="field">
+      <label>收件人姓名<span class="req">*</span></label>
+      <input type="text" id="queryName" placeholder="請輸入您的姓名">
     </div>
-    <div class="field hide" id="qf-last4">
+    <div class="field">
       <label>電話後四碼<span class="req">*</span></label>
       <input type="tel" id="queryLast4" maxlength="4" inputmode="numeric" placeholder="＿＿＿＿" class="last4-input">
-      <div class="err-msg" id="queryMsg">後四碼不正確，請再確認</div>
+      <div class="err-msg" id="queryMsg">姓名或電話後四碼不正確，請再確認</div>
     </div>
-    <button class="btn hide" id="queryBtn">查詢進度</button>
+    <button class="btn" id="queryBtn">查詢進度</button>
     <button class="btn btn-ghost" onclick="backToMode()">返回主選單</button>
   </div>
 
-  <!-- ④ 查詢結果頁 -->
   <div id="queryResultCard" class="card hide">
     <div class="welcome-bar" id="queryWelcomeBar"></div>
     <div id="queryList"></div>
     <button class="btn btn-ghost" onclick="backToMode()">返回主選單</button>
   </div>
 
-  <!-- ② 建檔頁 -->
   <div id="registerCard" class="card hide">
     <div class="reg-head">
       <div class="reg-icon">🌱</div>
@@ -303,7 +286,6 @@
     <button class="btn btn-ghost" id="regBackBtn">返回</button>
   </div>
 
-  <!-- ③ 付款回報表單 -->
   <div id="formCard" class="card hide">
     <div class="welcome-bar" id="welcomeBar"></div>
 
@@ -359,7 +341,6 @@
     <button class="btn" id="submitBtn">送出回報</button>
   </div>
 
-  <!-- 完成頁 -->
   <div id="doneCard" class="card done hide">
     <div class="tick">✓</div><h2 id="doneTitle">回報完成！</h2>
     <div class="sub">請複製下方內容貼回給土豆媽 😊</div>
@@ -372,14 +353,10 @@
 </div>
 
 <script>
-var GAS_URL = 'https://script.google.com/macros/s/AKfycby37D4RJRP8G_5LsEYExlgwxRtLO-tpKnhboHE_0F_m97N2bWFADE2NZhkpoRbTdmR-/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgeVTk6rXnVEZQyg-_gU7NAnsZqeBfKNmPONtEF-gFVYXpkWRvieFdchhOOQg220t3/exec';
 
-// ========================================
-// ★ 設定免運門檻
-// ========================================
-var STORE_FREE_TARGET = 1500; // 超商免運門檻
-var HOME_FREE_TARGET = 2000;  // 宅配免運門檻
-// ========================================
+var STORE_FREE_TARGET = 1500;
+var HOME_FREE_TARGET = 2000;
 
 var DATA = { groups: [], members: {}, allNames: [], bank: [] };
 var curGroup = null;
@@ -410,13 +387,6 @@ function loadInit(attempt){
       gSel.appendChild(o);
     });
 
-    var qSel = document.getElementById('queryNick');
-    qSel.innerHTML = '<option value="">請選擇</option>';
-    DATA.allNames.forEach(function(n){
-      var o = document.createElement('option'); o.value = n; o.textContent = n;
-      qSel.appendChild(o);
-    });
-
     document.getElementById('loading').classList.add('hide');
     document.getElementById('modeSelectCard').classList.remove('hide');
   }, function(){
@@ -436,7 +406,7 @@ document.getElementById('btnModeQuery').addEventListener('click', function(){
   state.mode = 'query';
   document.getElementById('modeSelectCard').classList.add('hide');
   document.getElementById('queryLoginCard').classList.remove('hide');
-  document.getElementById('headSub').textContent = '輸入後四碼，查詢您的所有訂單';
+  document.getElementById('headSub').textContent = '請輸入姓名與電話後四碼查詢訂單';
 });
 function backToMode(){
   ['loginCard','queryLoginCard','queryResultCard','registerCard','formCard'].forEach(function(id){
@@ -500,33 +470,26 @@ document.getElementById('loginBtn').addEventListener('click', function(){
   });
 });
 
-document.getElementById('queryNick').addEventListener('change', function(){
-  state.nick = this.value;
-  if(state.nick){
-    document.getElementById('qf-last4').classList.remove('hide');
-    document.getElementById('queryBtn').classList.remove('hide');
-  } else {
-    document.getElementById('qf-last4').classList.add('hide');
-    document.getElementById('queryBtn').classList.add('hide');
-  }
-});
-
+// ★ 依姓名與電話後四碼查詢訂單
 document.getElementById('queryBtn').addEventListener('click', function(){
+  var name = document.getElementById('queryName').value.trim();
   var last4 = document.getElementById('queryLast4').value;
-  if(last4.length!==4) return toast('請輸入4碼');
+  if(!name) return toast('請輸入姓名');
+  if(last4.length!==4) return toast('請輸入電話後4碼');
+
   var btn = this; btn.disabled=true; btn.textContent='查詢中...';
   
-  jsonp({action:'queryOrders', nickname:state.nick, last4:last4}, function(res){
+  jsonp({action:'queryOrdersByName', name:name, last4:last4}, function(res){
     btn.disabled=false; btn.textContent='查詢進度';
     if(res.status==='ok') {
-      state.customer = res.data; // 儲存顧客資料給湊免運表單使用
+      state.customer = res.customer;
+      state.nick = res.nickname; // 記錄對應的暱稱
       renderQuery(res);
     }
-    else toast('後四碼錯誤或無資料');
+    else toast('查無此姓名或電話後四碼錯誤');
   });
 });
 
-// ★ 查詢結果與湊免運介面渲染
 function renderQuery(resPayload){
   var orders = resPayload.data || [];
   var cus = resPayload.customer || {};
@@ -536,9 +499,9 @@ function renderQuery(resPayload){
   document.getElementById('headSub').textContent = '以下是您的歷史訂單與進度 😊';
 
   var wb = document.getElementById('queryWelcomeBar');
-  var displayNick = state.nick.split(/[\/／@＠]/)[0].trim() || state.nick;
-  wb.innerHTML = '<div class="welcome-avatar">' + (displayNick.charAt(0)||'👋') + '</div>' +
-    '<div class="welcome-text"><div class="welcome-hi">查詢成功</div><div class="welcome-name">' + displayNick + '</div></div>';
+  var displayName = cus.name || document.getElementById('queryName').value.trim();
+  wb.innerHTML = '<div class="welcome-avatar">' + (displayName.charAt(0)||'👋') + '</div>' +
+    '<div class="welcome-text"><div class="welcome-hi">查詢成功</div><div class="welcome-name">' + displayName + '</div></div>';
 
   var list = document.getElementById('queryList');
   if(!orders || orders.length===0){
@@ -553,11 +516,13 @@ function renderQuery(resPayload){
     var payClass = o.payStatus === '未付' ? 'tag-pay-no' : (o.payStatus === '待算退分潤' ? 'tag-pay-share' : 'tag-pay-yes');
     var shipClass = 'tag-ship-0';
     if(o.shipStatus === '訂單處理中') shipClass = 'tag-ship-4';
+    else if(o.shipStatus === '已到貨，可約時間自取。') shipClass = 'tag-ship-5';
+    else if(o.shipStatus === '已取貨') shipClass = 'tag-ship-6';
     else if(o.shipStatus === '已到貨') shipClass = 'tag-ship-1';
     else if(o.shipStatus === '已到貨，待湊免運商品' || o.shipStatus === '待湊免運') {
       shipClass = 'tag-ship-2';
       hasPool = true;
-      poolSum += (o.amount || 0); // 累計湊免運金額
+      poolSum += (o.amount || 0);
     }
     else if(o.shipStatus === '已出貨') shipClass = 'tag-ship-3';
     
@@ -580,11 +545,8 @@ function renderQuery(resPayload){
       '</div></div>';
   });
 
-  // ★ 插入湊免運進度區塊
   if(hasPool) {
     var poolHtml = '';
-    
-    // 狀況1: 未達最低門檻 (超商1500)
     if(poolSum < STORE_FREE_TARGET) {
       var gap = STORE_FREE_TARGET - poolSum;
       poolHtml = '<div class="pool-progress-box">' +
@@ -593,9 +555,7 @@ function renderQuery(resPayload){
         '差 <span class="pool-progress-highlight">$' + gap.toLocaleString() + '</span> 免運，快去看看還有什麼好物～<br><br>' +
         '<span style="font-size:12.5px;color:var(--muted);">未湊滿免運要提前出貨請私訊土豆媽官方帳號為您處理❤️</span></div>' +
       '</div>';
-    } 
-    // 狀況2: 達到免運門檻，讓客人點選出貨
-    else {
+    } else {
       var isForceHome = poolSum >= HOME_FREE_TARGET;
       var methodHtml = '';
       if(isForceHome) {
@@ -630,10 +590,8 @@ function renderQuery(resPayload){
 
   list.innerHTML = html;
 
-  // ★ 綁定湊免運出貨表單的按鈕功能
   if(hasPool && poolSum >= STORE_FREE_TARGET) {
     var isForceHome = poolSum >= HOME_FREE_TARGET;
-    
     if(!isForceHome) {
       bindRadios('poolDelBox', function(v){
         if(v==='交貨便'){
@@ -655,7 +613,7 @@ function renderQuery(resPayload){
       if(!name || !phone || !addr) return toast('請填寫完整收件資料');
       
       var text = '【湊免運出貨通知】\n' +
-                 '暱稱：' + state.nick + '\n' +
+                 '暱稱：' + (state.nick || name) + '\n' +
                  '累積金額：$' + poolSum.toLocaleString() + '\n' +
                  '收件人：' + name + '\n' +
                  '電話：' + phone + '\n' +
