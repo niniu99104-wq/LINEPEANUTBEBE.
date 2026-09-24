@@ -253,7 +253,6 @@
     <button class="btn btn-ghost" onclick="backToMode()">返回主選單</button>
   </div>
 
-  <!-- ①-B 查詢登入頁 (改為輸入姓名與電話後四碼) -->
   <div id="queryLoginCard" class="card hide">
     <div class="field">
       <label>收件人姓名<span class="req">*</span></label>
@@ -353,7 +352,8 @@
 </div>
 
 <script>
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgeVTk6rXnVEZQyg-_gU7NAnsZqeBfKNmPONtEF-gFVYXpkWRvieFdchhOOQg220t3/exec';
+// ★★★ 注意：這裡記得換回您自己的最新 GAS URL 喔！ ★★★
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbwuAGzTAaT70fYEGrqkNsMCEcjyf3qdb6I0u8Kr2tdBfSovt4gynHQ8fFCvRdjCW4Yu/exec';
 
 var STORE_FREE_TARGET = 1500;
 var HOME_FREE_TARGET = 2000;
@@ -470,7 +470,6 @@ document.getElementById('loginBtn').addEventListener('click', function(){
   });
 });
 
-// ★ 依姓名與電話後四碼查詢訂單
 document.getElementById('queryBtn').addEventListener('click', function(){
   var name = document.getElementById('queryName').value.trim();
   var last4 = document.getElementById('queryLast4').value;
@@ -479,11 +478,12 @@ document.getElementById('queryBtn').addEventListener('click', function(){
 
   var btn = this; btn.disabled=true; btn.textContent='查詢中...';
   
+  // ★ 使用新建立的 action: queryOrdersByName 呼叫 GAS
   jsonp({action:'queryOrdersByName', name:name, last4:last4}, function(res){
     btn.disabled=false; btn.textContent='查詢進度';
     if(res.status==='ok') {
       state.customer = res.customer;
-      state.nick = res.nickname; // 記錄對應的暱稱
+      state.nick = res.nickname;
       renderQuery(res);
     }
     else toast('查無此姓名或電話後四碼錯誤');
@@ -512,21 +512,36 @@ function renderQuery(resPayload){
   var poolSum = 0;
   var hasPool = false;
 
+  // ★ 雙重保險邏輯：(1) GAS 傳來的 poolIntent (回報紀錄為"湊免運"或"是") OR (2) 物流狀態包含"湊免運"
+  orders.forEach(function(o){
+    var st = o.shipStatus || '';
+    var wantsToPool = o.poolIntent || (st.indexOf('湊免運') > -1);
+    
+    // 只要客人有湊單意願，且該單還沒完成出貨，就納入湊免運額度計算
+    if(wantsToPool && st !== '已出貨' && st !== '已取貨') {
+      poolSum += (o.amount || 0);
+      hasPool = true;
+    }
+  });
+
   orders.forEach(function(o){
     var payClass = o.payStatus === '未付' ? 'tag-pay-no' : (o.payStatus === '待算退分潤' ? 'tag-pay-share' : 'tag-pay-yes');
     var shipClass = 'tag-ship-0';
+    
     if(o.shipStatus === '訂單處理中') shipClass = 'tag-ship-4';
     else if(o.shipStatus === '已到貨，可約時間自取。') shipClass = 'tag-ship-5';
     else if(o.shipStatus === '已取貨') shipClass = 'tag-ship-6';
     else if(o.shipStatus === '已到貨') shipClass = 'tag-ship-1';
-    else if(o.shipStatus === '已到貨，待湊免運商品' || o.shipStatus === '待湊免運') {
-      shipClass = 'tag-ship-2';
-      hasPool = true;
-      poolSum += (o.amount || 0);
-    }
+    else if(o.shipStatus === '已到貨，待湊免運商品' || o.shipStatus === '待湊免運') shipClass = 'tag-ship-2';
     else if(o.shipStatus === '已出貨') shipClass = 'tag-ship-3';
     
     var shipText = o.shipStatus || '未處理';
+    
+    // ★ 貼心小提示：如果是被隱形列入合併的單，加上(含湊單)字眼讓客人知道這筆有算進去
+    if(o.poolIntent && shipText.indexOf('湊免運') === -1 && shipText !== '已出貨' && shipText !== '已取貨') {
+      shipText += ' (含湊單)';
+    }
+
     if(o.shipDate) shipText += ' (' + o.shipDate + ')';
 
     var itemsHtml = '';
@@ -657,7 +672,7 @@ document.getElementById('regBtn').addEventListener('click', function(){
   document.getElementById('rf-phone').classList.toggle('bad', !okPhone);
   if(!okName || !okPhone) return;
 
-  var btn = this; btn.disabled = true; btn.textContent = '建檔中…';
+  var btn = this; btn.disabled = true; btn.textContent = '建檔並開始';
   jsonp({action:'register', payload:JSON.stringify({nickname:state.nick, name:name, phone:phone})}, function(res){
     btn.disabled = false; btn.textContent = '建檔並開始';
     if(res.ok) { document.getElementById('registerCard').classList.add('hide'); enterForm(res.data); }
