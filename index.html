@@ -340,7 +340,6 @@
 
     <div class="bank-box hide" id="bankBox"><div id="bankList"></div><button type="button" class="btn btn-ghost" id="bankCopyBtn">複製帳號</button></div>
     
-    <!-- ★ 新增 LINE PAY MONEY 專屬提示框 -->
     <div class="linepay-box hide" id="linepayBox">
       <a href="https://line.me/ti/p/taMX75HZDW" target="_blank">🔗 加好友連結：https://line.me/ti/p/taMX75HZDW</a>
       <div class="tip">先加土豆媽好友 ➔ 點選手機轉帳</div>
@@ -354,7 +353,7 @@
 
   <div id="doneCard" class="card done hide">
     <div class="tick">✓</div><h2 id="doneTitle">回報完成！</h2>
-    <div class="sub">請複製下方內容貼回給豆媽選品官方帳號 😊</div>
+    <div class="sub">請複製下方內容貼回到官方帳號～</div>
     <div class="copybox" id="resultText"></div>
     <button class="btn" id="copyBtn">複製內容</button>
     <button class="btn btn-ghost" onclick="location.reload()">返回首頁</button>
@@ -364,7 +363,7 @@
 </div>
 
 <script>
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbxIfUEq0yvw8YqtCeg7jPjcT_K64TybMXi9ls2HXph47-U3w4ybRojH3MCbeVM2RMRM/exec'; // 記得確認網址正確
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbyBxv1uf264VolwKIqqlHUF6_8-CQUgkY4sqqVMhfj4cCQwUsNfV042zGTg_iW0RWhT/exec';
 
 var STORE_FREE_TARGET = 1500;
 var HOME_FREE_TARGET = 2000;
@@ -561,7 +560,6 @@ function renderQuery(resPayload){
       '<div class="q-body">' +
         '<div class="q-tags">' +
           '<span class="q-tag ' + payClass + '">付款: ' + o.payStatus + '</span>' +
-          /* ★ 這裡已經將 物流 改成了 訂單狀態 */
           '<span class="q-tag ' + shipClass + '">訂單狀態: ' + shipText + '</span>' + 
         '</div>' + itemsHtml +
         '<div class="q-amount">應付 $'+ o.amount.toLocaleString() +'</div>' +
@@ -576,7 +574,7 @@ function renderQuery(resPayload){
         '<div class="pool-progress-title">🚚 湊免運進度</div>' +
         '<div class="pool-progress-desc">目前累積金額：$' + poolSum.toLocaleString() + '<br>' +
         '差 <span class="pool-progress-highlight">$' + gap.toLocaleString() + '</span> 免運，快去看看還有什麼好物～<br><br>' +
-        '<span style="font-size:12.5px;color:var(--muted);">未湊滿免運要提前出貨請私訊豆媽選品官方帳號為您處理❤️</span></div>' +
+        '<span style="font-size:12.5px;color:var(--muted);">未湊滿免運要提前出貨請私訊土豆媽官方帳號為您處理❤️</span></div>' +
       '</div>';
     } else {
       var isForceHome = poolSum >= HOME_FREE_TARGET;
@@ -705,14 +703,13 @@ function enterForm(record){
   var pays = curGroup ? curGroup.pays : ['匯款'];
   pays.forEach(function(p){
     var lab = document.createElement('label'); lab.setAttribute('data-v', p);
-    // ★ 這裡改成了 LINE PAY MONEY
     lab.innerHTML = '<input type="radio" name="pay" value="'+p+'">' + (p==='LINEPAY'?'LINE PAY MONEY':p==='信用卡'?'信用卡':'銀行轉帳／ATM');
     box.appendChild(lab);
   });
   document.getElementById('f-pay').classList.remove('hide');
   document.getElementById('f-payInfo').classList.add('hide');
   document.getElementById('bankBox').classList.add('hide');
-  document.getElementById('linepayBox').classList.add('hide'); // 先隱藏
+  document.getElementById('linepayBox').classList.add('hide'); 
   bindRadios('payBox', onPayChange);
   if(pays.length===1){ box.querySelector('input').checked=true; box.querySelector('label').classList.add('on'); onPayChange(pays[0]); }
 
@@ -891,7 +888,6 @@ function onPayChange(v){
   } else {
     inp.classList.remove('hide'); f.classList.remove('hide');
     if(v==='LINEPAY'){ 
-      // ★ 選擇 LINEPAY 時，顯示專屬提示框
       linepayBox.classList.remove('hide'); 
       lab.innerHTML = 'LINE PAY 名字<span class="req">*</span>'; 
       inp.setAttribute('inputmode', 'text'); 
@@ -923,14 +919,58 @@ document.getElementById('submitBtn').addEventListener('click', function(){
   
   var btn = this; btn.disabled = true; btn.textContent = '送出中…';
   var c = state.calc;
+  
+  // ★ 自動拆單與分配運費邏輯
+  var isMerge = c.merge && state.otherList.length > 0;
+  var records = [];
+  var groupNames = [document.getElementById('group').value];
+  
+  var isCard = pv.value === '信用卡';
+  var groupD = isCard ? 0 : calcDiscount(c.goods); // 總折扣
+  var mainDiscount = state.memberDiscount + groupD; 
+  var mainAmount = Math.max(0, state.goods - mainDiscount + c.shipping);
+  
+  // 1. 寫入主單（所有運費、全團活動折扣都掛在這裡）
+  records.push({
+    group: document.getElementById('group').value,
+    goods: state.goods,
+    discount: mainDiscount,
+    shipping: c.shipping,
+    amount: mainAmount
+  });
+  
+  // 2. 寫入副單（運費為0，只扣自己專屬的會員折扣）
+  if (isMerge) {
+    state.otherList.forEach(function(sub) {
+      groupNames.push(sub.g);
+      records.push({
+        group: sub.g,
+        goods: sub.a,
+        discount: sub.d,
+        shipping: 0,
+        amount: Math.max(0, sub.a - sub.d)
+      });
+    });
+  }
+  
+  var textGroup = groupNames.join('、') + (isMerge ? ' (合併結帳)' : '');
+
   var payload = {
-    group: document.getElementById('group').value, nickname: state.nick,
-    name: document.getElementById('name').value.trim(), phone: document.getElementById('phone').value.trim(),
+    nickname: state.nick, name: document.getElementById('name').value.trim(),
+    phone: document.getElementById('phone').value.trim(),
     delivery: dv.value, address: dv.value==='交貨便' ? document.getElementById('store').value.trim() : (dv.value==='宅配' ? document.getElementById('addr').value.trim() : ''),
     payMethod: pv.value, payInfo: document.getElementById('payInfo').value.trim(),
-    merge: c.merge, pool: c.pool, poolPending: c.poolPending,
-    goods: c.goods, discount: c.discount, shipping: c.shipping, amount: c.total,
-    note: document.getElementById('note').value.trim()
+    note: document.getElementById('note').value.trim(),
+    merge: isMerge, pool: c.pool, poolPending: c.poolPending,
+    
+    records: records, // 傳送拆分好的陣列給後端
+    
+    // 傳送給 LINE 回報文字的總計資訊
+    textGroup: textGroup,
+    textGoods: c.goods,
+    textDiscount: c.discount,
+    textShipping: c.shipping,
+    textTotal: c.total
   };
 
   jsonp({action:'submit', payload:JSON.stringify(payload)}, function(res){
