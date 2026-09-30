@@ -22,6 +22,7 @@
     --ok-soft:#e9f5ef;
     --err:#d17a6e;
     --linepay:#06C755;
+    --credit:#4a90e2;
     --amount:#b76a44;
     --ship-gray:#8e8e8e;
     --ship-blue:#4a90e2;
@@ -127,14 +128,7 @@
   .welcome-name{ font-size:16px;font-weight:700;color:var(--ink);letter-spacing:.5px; white-space:nowrap;overflow:hidden;text-overflow:ellipsis; margin:1px 0 3px; }
 
   /* 湊免運進度區 */
-  .pool-progress-box {
-    background: linear-gradient(160deg, #fff8ef, #fdefe0);
-    border: 1.5px dashed #f0d9c0;
-    border-radius: var(--r-sm);
-    padding: 20px;
-    margin-bottom: 20px;
-    text-align: center;
-  }
+  .pool-progress-box { background: linear-gradient(160deg, #fff8ef, #fdefe0); border: 1.5px dashed #f0d9c0; border-radius: var(--r-sm); padding: 20px; margin-bottom: 20px; text-align: center; }
   .pool-progress-title { font-weight: 700; color: var(--accent-deep); font-size: 15px; margin-bottom: 8px; letter-spacing: 1px; }
   .pool-progress-desc { font-size: 14px; color: var(--ink-soft); line-height: 1.6; }
   .pool-progress-highlight { color: var(--err); font-weight: 700; font-size: 15px; }
@@ -194,6 +188,12 @@
   .linepay-box { background:#eaf8ef; border:2px solid var(--linepay); border-radius:var(--r-sm); padding:16px 18px; margin:-8px 0 20px; text-align:center; }
   .linepay-box a { color:var(--linepay); font-weight:700; text-decoration:none; font-size:15px; display:block; margin-bottom:10px; letter-spacing:0.5px; }
   .linepay-box .tip { display:inline-block; background:var(--linepay); color:#fff; font-size:13px; font-weight:700; padding:5px 14px; border-radius:20px; letter-spacing:1px; }
+
+  /* 信用卡 PAYUNi 專屬樣式 */
+  .credit-box { background:#f4f8ff; border:2px solid var(--credit); border-radius:var(--r-sm); padding:18px; margin:-8px 0 20px; text-align:center; }
+  .credit-box a { color:var(--credit); font-weight:700; text-decoration:none; font-size:16px; display:block; margin-bottom:12px; letter-spacing:0.5px; }
+  .credit-box .tip { display:inline-block; background:var(--credit); color:#fff; font-size:13px; font-weight:700; padding:6px 16px; border-radius:20px; letter-spacing:1px; margin-bottom:8px; }
+  .credit-box .note { color:var(--ink-soft); font-size:12.5px; margin-top:8px; }
 
   .done{text-align:center;} .done .tick{ width:58px;height:58px;border-radius:50%; background:var(--ok);color:#fff; font-size:30px;line-height:58px;margin:0 auto 16px; }
   .copybox{ background:var(--bg2);border:1.5px dashed var(--line); border-radius:var(--r-sm);padding:16px;text-align:left; font-size:14px; white-space:pre-wrap; }
@@ -340,9 +340,18 @@
 
     <div class="bank-box hide" id="bankBox"><div id="bankList"></div><button type="button" class="btn btn-ghost" id="bankCopyBtn">複製帳號</button></div>
     
+    <!-- LINE PAY MONEY 專屬提示框 -->
     <div class="linepay-box hide" id="linepayBox">
       <a href="https://line.me/ti/p/taMX75HZDW" target="_blank">🔗 加好友連結：https://line.me/ti/p/taMX75HZDW</a>
       <div class="tip">先加土豆媽好友 ➔ 點選手機轉帳</div>
+    </div>
+
+    <!-- ★ 新增：信用卡 PAYUNi 專屬提示框 -->
+    <div class="credit-box hide" id="creditBox">
+      <!-- ⚠️請將下面 href 裡面的網址換成您真實的 PAYUNi 連結 -->
+      <a href="https://api.payuni.com.tw/api/uop/receive_info/2/2/EASY1752297688917060/SIukhz95GeiDpZ07kqJq" target="_blank">🔗 點我前往 PAYUNi 刷卡結帳</a>
+      <div class="tip">刷卡完成後，請務必點擊下方「送出回報」喔！</div>
+      <div class="note">（注意：選擇信用卡付款，將不適用滿額折抵優惠）</div>
     </div>
 
     <div class="field hide" id="f-payInfo"><label id="payInfoLabel">帳號後五碼<span class="req">*</span></label><input type="text" id="payInfo"></div>
@@ -353,7 +362,7 @@
 
   <div id="doneCard" class="card done hide">
     <div class="tick">✓</div><h2 id="doneTitle">回報完成！</h2>
-    <div class="sub">請複製下方內容貼回到官方帳號～</div>
+    <div class="sub">請複製下方內容貼回給土豆媽 😊</div>
     <div class="copybox" id="resultText"></div>
     <button class="btn" id="copyBtn">複製內容</button>
     <button class="btn btn-ghost" onclick="location.reload()">返回首頁</button>
@@ -363,7 +372,7 @@
 </div>
 
 <script>
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbyBxv1uf264VolwKIqqlHUF6_8-CQUgkY4sqqVMhfj4cCQwUsNfV042zGTg_iW0RWhT/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbyBxv1uf264VolwKIqqlHUF6_8-CQUgkY4sqqVMhfj4cCQwUsNfV042zGTg_iW0RWhT/exec'; // 記得確認網址正確
 
 var STORE_FREE_TARGET = 1500;
 var HOME_FREE_TARGET = 2000;
@@ -707,9 +716,13 @@ function enterForm(record){
     box.appendChild(lab);
   });
   document.getElementById('f-pay').classList.remove('hide');
+  
+  // 初始化所有付款提示框隱藏
   document.getElementById('f-payInfo').classList.add('hide');
   document.getElementById('bankBox').classList.add('hide');
   document.getElementById('linepayBox').classList.add('hide'); 
+  document.getElementById('creditBox').classList.add('hide'); 
+
   bindRadios('payBox', onPayChange);
   if(pays.length===1){ box.querySelector('input').checked=true; box.querySelector('label').classList.add('on'); onPayChange(pays[0]); }
 
@@ -877,14 +890,17 @@ function onPayChange(v){
   var inp = document.getElementById('payInfo'); 
   var bankBox = document.getElementById('bankBox');
   var linepayBox = document.getElementById('linepayBox');
+  var creditBox = document.getElementById('creditBox'); // ★ 新增抓取信用卡框
   
   inp.value = '';
   bankBox.classList.add('hide');
   linepayBox.classList.add('hide');
+  creditBox.classList.add('hide'); // 先隱藏
   f.classList.add('hide');
 
   if(v==='信用卡'){
-    f.classList.remove('hide'); lab.innerHTML = '信用卡(不適用折抵)'; inp.classList.add('hide');
+    // ★ 選擇信用卡時，顯示專屬提示框，並且不顯示填寫後五碼的輸入框
+    creditBox.classList.remove('hide');
   } else {
     inp.classList.remove('hide'); f.classList.remove('hide');
     if(v==='LINEPAY'){ 
@@ -915,62 +931,22 @@ document.getElementById('bankCopyBtn').addEventListener('click', function(){
 document.getElementById('submitBtn').addEventListener('click', function(){
   var dv = document.querySelector('input[name=delivery]:checked');
   var pv = document.querySelector('input[name=pay]:checked');
+  
+  // 如果是信用卡，不需要檢查 f-payInfo 的內容
+  var isCredit = pv && pv.value === '信用卡';
   if(!document.getElementById('name').value || !document.getElementById('phone').value || !dv || !pv){ return toast('請填寫完整資料'); }
+  if(!isCredit && !document.getElementById('payInfo').value.trim()) { return toast('請填寫付款帳號資訊'); }
   
   var btn = this; btn.disabled = true; btn.textContent = '送出中…';
   var c = state.calc;
-  
-  // ★ 自動拆單與分配運費邏輯
-  var isMerge = c.merge && state.otherList.length > 0;
-  var records = [];
-  var groupNames = [document.getElementById('group').value];
-  
-  var isCard = pv.value === '信用卡';
-  var groupD = isCard ? 0 : calcDiscount(c.goods); // 總折扣
-  var mainDiscount = state.memberDiscount + groupD; 
-  var mainAmount = Math.max(0, state.goods - mainDiscount + c.shipping);
-  
-  // 1. 寫入主單（所有運費、全團活動折扣都掛在這裡）
-  records.push({
-    group: document.getElementById('group').value,
-    goods: state.goods,
-    discount: mainDiscount,
-    shipping: c.shipping,
-    amount: mainAmount
-  });
-  
-  // 2. 寫入副單（運費為0，只扣自己專屬的會員折扣）
-  if (isMerge) {
-    state.otherList.forEach(function(sub) {
-      groupNames.push(sub.g);
-      records.push({
-        group: sub.g,
-        goods: sub.a,
-        discount: sub.d,
-        shipping: 0,
-        amount: Math.max(0, sub.a - sub.d)
-      });
-    });
-  }
-  
-  var textGroup = groupNames.join('、') + (isMerge ? ' (合併結帳)' : '');
-
   var payload = {
-    nickname: state.nick, name: document.getElementById('name').value.trim(),
-    phone: document.getElementById('phone').value.trim(),
+    group: document.getElementById('group').value, nickname: state.nick,
+    name: document.getElementById('name').value.trim(), phone: document.getElementById('phone').value.trim(),
     delivery: dv.value, address: dv.value==='交貨便' ? document.getElementById('store').value.trim() : (dv.value==='宅配' ? document.getElementById('addr').value.trim() : ''),
-    payMethod: pv.value, payInfo: document.getElementById('payInfo').value.trim(),
-    note: document.getElementById('note').value.trim(),
-    merge: isMerge, pool: c.pool, poolPending: c.poolPending,
-    
-    records: records, // 傳送拆分好的陣列給後端
-    
-    // 傳送給 LINE 回報文字的總計資訊
-    textGroup: textGroup,
-    textGoods: c.goods,
-    textDiscount: c.discount,
-    textShipping: c.shipping,
-    textTotal: c.total
+    payMethod: pv.value, payInfo: isCredit ? '已線上刷卡' : document.getElementById('payInfo').value.trim(),
+    merge: c.merge, pool: c.pool, poolPending: c.poolPending,
+    goods: c.goods, discount: c.discount, shipping: c.shipping, amount: c.total,
+    note: document.getElementById('note').value.trim()
   };
 
   jsonp({action:'submit', payload:JSON.stringify(payload)}, function(res){
