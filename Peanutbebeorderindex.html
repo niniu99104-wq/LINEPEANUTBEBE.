@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Peanutbebe. 團購下單</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap');
+
+  :root{
+    --cream:#F8F7F3;
+    --blue:#A6B8C8;
+    --beige:#D6C9B8;
+    --ink:#414B52;
+    --ink-soft:#6c757c;
+    --muted:#9aa5ad;
+    --line:#e8e4dc;
+    --card:#ffffff;
+    --ok:#7a9b8a;
+    --err:#c08573;
+    --r:16px;
+    --r-sm:11px;
+    --shadow:0 2px 16px rgba(65,75,82,.06);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{
+    margin:0;padding:0 0 90px;
+    background:var(--cream);color:var(--ink);
+    font-family:"Noto Sans TC",-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;
+    font-size:15px;line-height:1.7;font-weight:400;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:460px;margin:0 auto;}
+
+  /* 品牌頭 */
+  .brand{text-align:center;padding:28px 20px 20px;}
+  .brand h1{margin:0;font-size:22px;font-weight:600;letter-spacing:2px;}
+  .brand .sub{margin:6px 0 0;font-size:12.5px;color:var(--muted);letter-spacing:1px;}
+  .period-bar{
+    background:var(--card);margin:0 16px;border-radius:var(--r);
+    padding:14px 18px;box-shadow:var(--shadow);
+    font-size:13px;color:var(--ink-soft);
+  }
+  .period-bar b{color:var(--ink);font-weight:600;}
+  .period-bar .eta{color:var(--muted);font-size:12px;margin-top:3px;}
+
+  .loading{text-align:center;padding:60px 20px;color:var(--muted);font-weight:300;letter-spacing:1px;}
+
+  /* 商品卡 */
+  .product{
+    background:var(--card);margin:16px;border-radius:var(--r);
+    overflow:hidden;box-shadow:var(--shadow);
+  }
+  .p-imgwrap{position:relative;background:#f0ece4;aspect-ratio:1/1;overflow:hidden;}
+  .p-imgwrap img{width:100%;height:100%;object-fit:cover;display:block;}
+  .p-imgwrap .noimg{
+    width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+    color:var(--muted);font-size:13px;letter-spacing:1px;
+  }
+  .p-dots{position:absolute;bottom:10px;left:0;right:0;display:flex;gap:6px;justify-content:center;}
+  .p-dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.5);}
+  .p-dots i.on{background:#fff;}
+  .p-body{padding:18px;}
+  .p-cat{font-size:11px;color:var(--blue);letter-spacing:1.5px;font-weight:600;}
+  .p-name{font-size:17px;font-weight:600;margin:4px 0 8px;}
+  .p-desc{font-size:13px;color:var(--ink-soft);line-height:1.8;margin-bottom:14px;}
+  .p-promo{
+    background:var(--cream);border-radius:var(--r-sm);padding:10px 14px;
+    font-size:12.5px;color:var(--ink-soft);margin-bottom:16px;line-height:1.7;
+  }
+  .p-promo b{color:var(--ink);}
+
+  /* 規格選擇 */
+  .spec-group{margin-bottom:14px;}
+  .spec-tier{font-size:12px;color:var(--muted);letter-spacing:1px;margin-bottom:8px;font-weight:600;}
+  .spec-row{
+    display:flex;align-items:center;gap:10px;
+    padding:9px 0;border-bottom:1px solid var(--line);
+  }
+  .spec-row:last-child{border-bottom:none;}
+  .spec-name{flex:1;font-size:14px;}
+  .spec-price{font-size:13px;color:var(--ink-soft);min-width:52px;text-align:right;}
+  .qty{display:flex;align-items:center;gap:0;}
+  .qty button{
+    width:30px;height:30px;border:1px solid var(--line);background:#fff;
+    color:var(--ink);font-size:17px;cursor:pointer;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .qty button:first-child{border-radius:8px 0 0 8px;}
+  .qty button:last-child{border-radius:0 8px 8px 0;}
+  .qty button:active{background:var(--cream);}
+  .qty .n{
+    width:36px;height:30px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;
+  }
+
+  /* 購物車底欄 */
+  .cartbar{
+    position:fixed;left:0;right:0;bottom:0;z-index:50;
+    background:#fff;border-top:1px solid var(--line);
+    padding:12px 16px;box-shadow:0 -2px 16px rgba(65,75,82,.08);
+  }
+  .cartbar .inner{max-width:460px;margin:0 auto;display:flex;align-items:center;gap:12px;}
+  .cartbar .sum{flex:1;}
+  .cartbar .sum .cnt{font-size:12px;color:var(--muted);}
+  .cartbar .sum .amt{font-size:20px;font-weight:700;color:var(--ink);}
+  .cartbar button{
+    border:none;background:var(--ink);color:#fff;
+    padding:13px 26px;border-radius:var(--r-sm);
+    font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;letter-spacing:1px;
+  }
+  .cartbar button:disabled{background:#c5ccd0;}
+
+  /* 結帳抽屜 */
+  .sheet-mask{position:fixed;inset:0;background:rgba(65,75,82,.4);z-index:60;display:none;}
+  .sheet-mask.on{display:block;}
+  .sheet{
+    position:fixed;left:0;right:0;bottom:0;z-index:61;
+    background:var(--cream);border-radius:20px 20px 0 0;
+    max-width:460px;margin:0 auto;max-height:90vh;overflow-y:auto;
+    padding:22px 18px 30px;transform:translateY(100%);transition:transform .25s;
+  }
+  .sheet.on{transform:translateY(0);}
+  .sheet h2{font-size:17px;font-weight:600;margin:0 0 4px;text-align:center;}
+  .sheet .close{position:absolute;right:18px;top:18px;font-size:22px;color:var(--muted);cursor:pointer;background:none;border:none;}
+
+  .field{margin-bottom:16px;}
+  label{display:block;font-size:13px;font-weight:600;margin-bottom:7px;color:var(--ink-soft);}
+  .req{color:var(--err);margin-left:3px;}
+  input[type=text],input[type=tel],select,textarea{
+    width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:var(--r-sm);
+    font-size:16px;font-family:inherit;color:var(--ink);background:#fff;outline:none;
+  }
+  input:focus,select:focus,textarea:focus{border-color:var(--blue);}
+  textarea{resize:vertical;min-height:56px;}
+
+  .cart-review{background:#fff;border-radius:var(--r-sm);padding:14px 16px;margin-bottom:16px;}
+  .cart-line{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;color:var(--ink-soft);}
+  .cart-line .nm{flex:1;}
+  .cart-tot{display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);font-size:14px;}
+  .cart-tot .big{font-size:19px;font-weight:700;color:var(--ink);}
+
+  .radios{display:flex;gap:10px;}
+  .radios label{
+    flex:1;margin:0;border:1.5px solid var(--line);border-radius:var(--r-sm);
+    padding:12px 6px;text-align:center;cursor:pointer;font-weight:500;font-size:14px;
+    color:var(--ink-soft);background:#fff;
+  }
+  .radios input{position:absolute;opacity:0;pointer-events:none;}
+  .radios label.on{border-color:var(--blue);background:#eef2f5;color:var(--ink);font-weight:600;}
+
+  .btn{
+    width:100%;padding:15px;border:none;border-radius:var(--r-sm);
+    background:var(--ink);color:#fff;font-size:16px;font-weight:600;font-family:inherit;
+    cursor:pointer;letter-spacing:1px;margin-top:8px;
+  }
+  .btn:disabled{background:#c5ccd0;}
+  .err-msg{color:var(--err);font-size:13px;margin-top:10px;text-align:center;display:none;}
+  .err-msg.on{display:block;}
+
+  .done{text-align:center;padding:20px 0;}
+  .done .tick{width:54px;height:54px;border-radius:50%;background:var(--ok);color:#fff;font-size:28px;line-height:54px;margin:0 auto 14px;}
+  .done h2{margin:0 0 6px;}
+  .done .ono{font-size:15px;font-weight:700;color:var(--ink);background:#fff;border-radius:var(--r-sm);padding:10px;margin:14px 0;letter-spacing:1px;}
+  .done .note{font-size:13px;color:var(--ink-soft);line-height:1.8;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <h1>Peanutbebe.</h1>
+    <div class="sub">PREORDER · 團購下單</div>
+  </div>
+  <div id="periodBar" class="period-bar hide"></div>
+  <div id="loading" class="loading">載入中…</div>
+  <div id="catalog"></div>
+</div>
+
+<div class="cartbar hide" id="cartbar">
+  <div class="inner">
+    <div class="sum">
+      <div class="cnt" id="cartCnt">尚未選購</div>
+      <div class="amt">$<span id="cartAmt">0</span></div>
+    </div>
+    <button id="checkoutBtn" disabled>前往結帳</button>
+  </div>
+</div>
+
+<div class="sheet-mask" id="sheetMask"></div>
+<div class="sheet" id="sheet">
+  <button class="close" id="sheetClose">×</button>
+  <h2>確認訂單</h2>
+
+  <div id="checkoutForm">
+    <div class="cart-review" id="cartReview"></div>
+
+    <div class="field">
+      <label>LINE 暱稱<span class="req">*</span></label>
+      <input type="text" id="nickname" placeholder="您在群組顯示的名字">
+    </div>
+    <div class="field">
+      <label>收件人姓名<span class="req">*</span></label>
+      <input type="text" id="name" placeholder="真實姓名">
+    </div>
+    <div class="field">
+      <label>收件人電話<span class="req">*</span></label>
+      <input type="tel" id="phone" placeholder="09xxxxxxxx" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label>取貨方式<span class="req">*</span></label>
+      <div class="radios" id="deliveryBox">
+        <label data-v="超商取貨"><input type="radio" name="dv" value="超商取貨">超商取貨</label>
+        <label data-v="宅配"><input type="radio" name="dv" value="宅配">宅配</label>
+      </div>
+    </div>
+    <div class="field">
+      <label id="addrLabel">收件資料<span class="req">*</span></label>
+      <textarea id="addr" placeholder="超商：品牌+門市全名／宅配：完整地址"></textarea>
+    </div>
+    <div class="field">
+      <label>付款方式<span class="req">*</span></label>
+      <div class="radios" id="payBox">
+        <label data-v="匯款"><input type="radio" name="pm" value="匯款">銀行匯款</label>
+        <label data-v="LINEPAY"><input type="radio" name="pm" value="LINEPAY">LINE Pay</label>
+      </div>
+    </div>
+    <div class="field">
+      <label>備註（選填）</label>
+      <textarea id="note" placeholder="有其他需要說明的再填寫"></textarea>
+    </div>
+
+    <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ink-soft);font-weight:400;margin-bottom:8px;">
+      <input type="checkbox" id="agree" style="margin-top:3px;width:18px;height:18px;flex-shrink:0;">
+      <span>我已了解此為預購商品，約 3-4 週到貨（可能因韓國品牌追加或物流延後），送出後將依金額完成付款。</span>
+    </label>
+
+    <button class="btn" id="submitBtn">送出訂單</button>
+    <div class="err-msg" id="errMsg"></div>
+  </div>
+
+  <div id="doneView" class="done hide">
+    <div class="tick">✓</div>
+    <h2>訂單已送出！</h2>
+    <div class="ono" id="doneOno"></div>
+    <div class="note">
+      請完成付款，並記下您的訂單編號方便查詢。<br>
+      我們會在群組通知採購與到貨進度 😊
+    </div>
+    <button class="btn" id="doneClose" style="margin-top:20px;">完成</button>
+  </div>
+</div>
+
+<script>
+/* ============ 設定區 ============ */
+var GAS_URL = 'https://script.google.com/macros/s/你的新部署ID/exec';
+/* ============================== */
+
+var CATALOG = null;
+var cart = {}; // key = productId|spec → { productId, name, spec, tier, price, qty }
+
+/* ---------- JSONP ---------- */
+function jsonp(params, onOk, onErr){
+  var cb = 'cb_' + Date.now() + '_' + Math.floor(Math.random()*1e6);
+  var s = document.createElement('script');
+  var timer = setTimeout(function(){ cleanup(); onErr && onErr(); }, 30000);
+  function cleanup(){ clearTimeout(timer); try{delete window[cb];}catch(e){window[cb]=undefined;} if(s.parentNode) s.parentNode.removeChild(s); }
+  window[cb] = function(r){ cleanup(); onOk && onOk(r); };
+  var qs = Object.keys(params).map(function(k){ return encodeURIComponent(k)+'='+encodeURIComponent(params[k]); }).join('&');
+  s.src = GAS_URL + '?' + qs + '&callback=' + cb;
+  s.onerror = function(){ cleanup(); onErr && onErr(); };
+  document.head.appendChild(s);
+}
+
+/* ---------- 載入商品 ---------- */
+jsonp({ action:'catalog' }, function(res){
+  if (!res.ok || !res.data || !res.data.period){
+    document.getElementById('loading').textContent = '目前沒有開團中的商品';
+    return;
+  }
+  CATALOG = res.data;
+  renderPeriod();
+  renderCatalog();
+  document.getElementById('loading').classList.add('hide');
+  document.getElementById('cartbar').classList.remove('hide');
+}, function(){
+  document.getElementById('loading').textContent = '載入失敗，請重新整理';
+});
+
+function renderPeriod(){
+  var p = CATALOG.period;
+  var bar = document.getElementById('periodBar');
+  bar.innerHTML = '<b>' + esc(p.name) + '</b>' +
+    (p.deadline ? '　截單：' + esc(p.deadline) : '') +
+    (p.eta ? '<div class="eta">預計到貨：' + esc(p.eta) + '</div>' : '');
+  bar.classList.remove('hide');
+}
+
+function renderCatalog(){
+  var box = document.getElementById('catalog');
+  box.innerHTML = '';
+  CATALOG.products.forEach(function(prod){
+    box.appendChild(buildProduct(prod));
+  });
+}
+
+function buildProduct(prod){
+  var el = document.createElement('div');
+  el.className = 'product';
+
+  // 圖片
+  var imgHtml;
+  if (prod.images && prod.images.length){
+    imgHtml = '<img src="' + esc(prod.images[0]) + '" alt="">';
+  } else {
+    imgHtml = '<div class="noimg">商品照片準備中</div>';
+  }
+
+  // 優惠說明
+  var promoHtml = '';
+  if (prod.promos && prod.promos.length && prod.promos[0].note){
+    promoHtml = '<div class="p-promo">🎀 <b>優惠</b>　' + esc(prod.promos[0].note) + '</div>';
+  }
+
+  // 規格依級距分組
+  var tiers = {};
+  prod.specs.forEach(function(s){ (tiers[s.tier] = tiers[s.tier] || []).push(s); });
+  var specHtml = '';
+  Object.keys(tiers).forEach(function(t){
+    specHtml += '<div class="spec-group"><div class="spec-tier">' +
+      (t === 'A' ? '幼童' : t === 'B' ? '大童' : esc(t)) + '</div>';
+    tiers[t].forEach(function(s){
+      var key = prod.id + '|' + s.spec;
+      specHtml += '<div class="spec-row">' +
+        '<span class="spec-name">' + esc(s.spec) + '</span>' +
+        '<span class="spec-price">$' + s.price + '</span>' +
+        '<div class="qty" data-key="' + esc(key) + '" data-pid="' + esc(prod.id) +
+          '" data-spec="' + esc(s.spec) + '" data-tier="' + esc(s.tier) + '" data-price="' + s.price + '">' +
+          '<button class="minus">−</button>' +
+          '<span class="n">0</span>' +
+          '<button class="plus">+</button>' +
+        '</div></div>';
+    });
+    specHtml += '</div>';
+  });
+
+  el.innerHTML =
+    '<div class="p-imgwrap">' + imgHtml + '</div>' +
+    '<div class="p-body">' +
+      '<div class="p-cat">' + esc(prod.category) + '</div>' +
+      '<div class="p-name">' + esc(prod.name) + '</div>' +
+      (prod.desc ? '<div class="p-desc">' + esc(prod.desc) + '</div>' : '') +
+      promoHtml + specHtml +
+    '</div>';
+
+  // 綁定加減
+  el.querySelectorAll('.qty').forEach(function(q){
+    var nEl = q.querySelector('.n');
+    q.querySelector('.plus').addEventListener('click', function(){ changeQty(q, nEl, 1); });
+    q.querySelector('.minus').addEventListener('click', function(){ changeQty(q, nEl, -1); });
+  });
+  return el;
+}
+
+function changeQty(q, nEl, delta){
+  var key = q.getAttribute('data-key');
+  var cur = cart[key] ? cart[key].qty : 0;
+  var next = Math.max(0, cur + delta);
+  if (next === 0){ delete cart[key]; }
+  else {
+    cart[key] = {
+      productId: q.getAttribute('data-pid'),
+      name: q.closest('.product').querySelector('.p-name').textContent,
+      spec: q.getAttribute('data-spec'),
+      tier: q.getAttribute('data-tier'),
+      price: Number(q.getAttribute('data-price')),
+      qty: next
+    };
+  }
+  nEl.textContent = next;
+  updateCartBar();
+}
+
+/* ---------- 購物車底欄（即時估算，送出前由後端重算） ---------- */
+function updateCartBar(){
+  var items = Object.keys(cart).map(function(k){ return cart[k]; });
+  var cnt = items.reduce(function(s,i){ return s + i.qty; }, 0);
+  document.getElementById('cartCnt').textContent = cnt > 0 ? ('已選 ' + cnt + ' 件') : '尚未選購';
+  // 前端用後端同款邏輯估算，僅供顯示
+  var est = estimate(items);
+  document.getElementById('cartAmt').textContent = est.toLocaleString();
+  document.getElementById('checkoutBtn').disabled = cnt === 0;
+}
+
+// 前端估算（與後端 pairHalf 同邏輯，僅顯示用）
+function estimate(items){
+  var byProduct = {};
+  items.forEach(function(it){ (byProduct[it.productId] = byProduct[it.productId] || []).push(it); });
+  var goods = 0;
+  Object.keys(byProduct).forEach(function(pid){
+    var prod = CATALOG.products.filter(function(p){ return p.id === pid; })[0];
+    var promo = (prod && prod.promos && prod.promos[0]) || null;
+    goods += calcSub(byProduct[pid], promo);
+  });
+  return goods;
+}
+function calcSub(items, promo){
+  var byTier = {};
+  items.forEach(function(it){
+    var t = it.tier || '_';
+    if (!byTier[t]) byTier[t] = { qty:0, unitSum:0 };
+    byTier[t].qty += it.qty; byTier[t].unitSum += it.price * it.qty;
+  });
+  var pairPrice = {};
+  if (promo && promo.content){
+    promo.content.split(';').forEach(function(seg){ var kv=seg.split(':'); if(kv.length===2) pairPrice[kv[0].trim()]=Number(kv[1])||0; });
+  }
+  var sub = 0;
+  Object.keys(byTier).forEach(function(t){
+    var g = byTier[t];
+    if (promo && promo.type==='pairHalf' && g.qty >= (promo.min||2) && pairPrice[t]){
+      sub += Math.round(pairPrice[t]/2 * g.qty);
+    } else { sub += g.unitSum; }
+  });
+  return sub;
+}
+
+/* ---------- 結帳抽屜 ---------- */
+document.getElementById('checkoutBtn').addEventListener('click', openSheet);
+document.getElementById('sheetClose').addEventListener('click', closeSheet);
+document.getElementById('sheetMask').addEventListener('click', closeSheet);
+
+function openSheet(){
+  renderCartReview();
+  document.getElementById('sheetMask').classList.add('on');
+  document.getElementById('sheet').classList.add('on');
+}
+function closeSheet(){
+  document.getElementById('sheetMask').classList.remove('on');
+  document.getElementById('sheet').classList.remove('on');
+}
+
+function renderCartReview(){
+  var items = Object.keys(cart).map(function(k){ return cart[k]; });
+  var html = '';
+  items.forEach(function(it){
+    html += '<div class="cart-line"><span class="nm">' + esc(it.name) + ' ' + esc(it.spec) +
+            '</span><span>×' + it.qty + '</span></div>';
+  });
+  var est = estimate(items);
+  html += '<div class="cart-tot"><span>商品小計（運費結帳後確認）</span><span class="big">$' + est.toLocaleString() + '</span></div>';
+  document.getElementById('cartReview').innerHTML = html;
+}
+
+/* 取貨 / 付款 單選 */
+bindRadios('deliveryBox', function(v){
+  document.getElementById('addrLabel').innerHTML =
+    (v === '超商取貨' ? '收件門市' : '收件地址') + '<span class="req">*</span>';
+  document.getElementById('addr').placeholder =
+    v === '超商取貨' ? '例：7-11 大安門市 / 全家 忠孝店' : '請填完整地址（含郵遞區號）';
+});
+bindRadios('payBox', function(){});
+function bindRadios(boxId, cb){
+  var box = document.getElementById(boxId);
+  box.querySelectorAll('label').forEach(function(lab){
+    lab.addEventListener('click', function(){
+      box.querySelectorAll('label').forEach(function(l){ l.classList.remove('on'); });
+      lab.classList.add('on'); lab.querySelector('input').checked = true;
+      cb(lab.getAttribute('data-v'));
+    });
+  });
+}
+
+/* ---------- 送出 ---------- */
+document.getElementById('submitBtn').addEventListener('click', function(){
+  var err = document.getElementById('errMsg');
+  var nickname = document.getElementById('nickname').value.trim();
+  var name = document.getElementById('name').value.trim();
+  var phone = document.getElementById('phone').value.trim();
+  var dv = document.querySelector('input[name=dv]:checked');
+  var pm = document.querySelector('input[name=pm]:checked');
+  var addr = document.getElementById('addr').value.trim();
+  var agree = document.getElementById('agree').checked;
+
+  var problems = [];
+  if (!nickname) problems.push('LINE 暱稱');
+  if (!name) problems.push('姓名');
+  if (!/^09\d{8}$/.test(phone)) problems.push('正確電話');
+  if (!dv) problems.push('取貨方式');
+  if (!addr) problems.push('收件資料');
+  if (!pm) problems.push('付款方式');
+  if (!agree) problems.push('勾選預購同意');
+
+  if (problems.length){
+    err.textContent = '請確認：' + problems.join('、');
+    err.classList.add('on');
+    return;
+  }
+  err.classList.remove('on');
+
+  var btn = this;
+  btn.disabled = true; btn.textContent = '送出中…';
+
+  var payload = {
+    action: 'placeOrder',
+    period: CATALOG.period.id,
+    nickname: nickname, name: name, phone: phone,
+    delivery: dv.value, address: addr, payMethod: pm.value,
+    note: document.getElementById('note').value.trim(),
+    cart: Object.keys(cart).map(function(k){ return cart[k]; })
+  };
+
+  jsonp(payload, function(res){
+    btn.disabled = false; btn.textContent = '送出訂單';
+    if (res.ok){
+      document.getElementById('checkoutForm').classList.add('hide');
+      document.getElementById('doneView').classList.remove('hide');
+      document.getElementById('doneOno').textContent = '訂單編號：' + res.orderNo;
+    } else {
+      err.textContent = '送出失敗：' + res.msg; err.classList.add('on');
+    }
+  }, function(){
+    btn.disabled = false; btn.textContent = '送出訂單';
+    err.textContent = '連線錯誤，請再試一次'; err.classList.add('on');
+  });
+});
+
+document.getElementById('doneClose').addEventListener('click', function(){ location.reload(); });
+
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+</script>
+</body>
+</html>
