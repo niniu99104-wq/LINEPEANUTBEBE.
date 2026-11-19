@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#fffaf2" />
+  <title>結帳系統已整合｜Peanutbebe</title>
+  <style>
+    :root {
+      --cream: #fffaf2;
+      --paper: #fffdf9;
+      --ink: #51483e;
+      --muted: #908477;
+      --peanut: #e8b84d;
+      --peanut-dark: #b98123;
+      --line: #f0e8dc;
+      --soft: #f8f1e5;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 28px 18px;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 12% 14%, rgba(232,184,77,.12), transparent 28%),
+        radial-gradient(ellipse at 90% 88%, rgba(238,213,174,.22), transparent 30%),
+        var(--cream);
+      font-family: "JF Open 粉圓", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    }
+    .page { width: min(100%, 520px); }
+    .brand { display: flex; justify-content: center; align-items: center; gap: 9px; margin-bottom: 20px; }
+    .brand-mark {
+      width: 38px; height: 38px; display: grid; place-items: center;
+      border-radius: 14px; background: #f4d88d; color: #78551c; font-size: 21px;
+      transform: rotate(-7deg);
+    }
+    .brand-name { font-size: 17px; font-weight: 800; letter-spacing: .08em; color: #635647; }
+    .card {
+      position: relative; overflow: hidden; padding: 42px 34px 32px;
+      border: 1px solid rgba(222,205,178,.62); border-radius: 28px;
+      background: rgba(255,253,249,.94); box-shadow: 0 18px 55px rgba(101,78,43,.09);
+      text-align: center;
+    }
+    .card::before { content: ""; position: absolute; inset: 0 0 auto; height: 6px; background: linear-gradient(90deg,#f5d98e,#e8b84d,#f5d98e); }
+    .icon-wrap {
+      width: 86px; height: 86px; margin: 0 auto 22px; display: grid; place-items: center;
+      border-radius: 28px; background: var(--soft); color: var(--peanut-dark);
+    }
+    .icon-wrap svg { width: 44px; height: 44px; }
+    .eyebrow { margin: 0 0 10px; color: var(--peanut-dark); font-size: 12px; font-weight: 800; letter-spacing: .18em; }
+    h1 { margin: 0; font-size: clamp(23px, 6vw, 30px); line-height: 1.4; letter-spacing: .025em; }
+    .description { margin: 16px 0 25px; color: var(--muted); font-size: 15px; line-height: 1.9; }
+    .steps { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 25px; text-align: left; }
+    .step { display: flex; gap: 10px; align-items: center; padding: 13px 12px; border: 1px solid var(--line); border-radius: 15px; background: #fffaf3; }
+    .step-num { flex: 0 0 25px; height: 25px; display: grid; place-items: center; border-radius: 50%; background: #f3dfae; color: #805c22; font-size: 12px; font-weight: 800; }
+    .step span:last-child { font-size: 13px; line-height: 1.5; }
+    .button {
+      min-height: 54px; display: flex; justify-content: center; align-items: center; gap: 10px;
+      padding: 14px 20px; border-radius: 16px; background: var(--peanut); color: #493718;
+      font-size: 16px; font-weight: 800; text-decoration: none; box-shadow: 0 7px 0 #d4a33b;
+      transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+    .button:hover { background: #efc965; transform: translateY(-2px); box-shadow: 0 9px 0 #d4a33b; }
+    .button:active { transform: translateY(3px); box-shadow: 0 4px 0 #d4a33b; }
+    .button svg { width: 18px; height: 18px; }
+    .note { margin: 20px 0 0; color: #a39788; font-size: 12px; line-height: 1.7; }
+    footer { padding: 19px 8px 0; color: #a39788; text-align: center; font-size: 11px; letter-spacing: .04em; }
+    @media (max-width: 430px) {
+      body { padding: 20px 14px; }
+      .card { padding: 35px 22px 27px; border-radius: 24px; }
+      .steps { grid-template-columns: 1fr; gap: 8px; }
+      .step { padding: 10px 12px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="brand" aria-label="Peanutbebe">
+      <span class="brand-mark" aria-hidden="true">🥜</span>
+      <span class="brand-name">Peanutbebe</span>
+    </div>
+
+    <section class="card" aria-labelledby="page-title">
+      <div class="icon-wrap" aria-hidden="true">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 8h16a4 4 0 0 1 4 4v24a4 4 0 0 1-4 4H16a4 4 0 0 1-4-4V12a4 4 0 0 1 4-4Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M19 16h10M19 22h10M19 28h5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="m27 33 3 3 6-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <p class="eyebrow">SERVICE UPDATE</p>
+      <h1 id="page-title">結帳系統已與官網合併</h1>
+      <p class="description">請前往 Peanutbebe 官網，使用 LINE 登入會員後，即可綁定並查詢訂單。</p>
+
+      <div class="steps" aria-label="操作步驟">
+        <div class="step"><span class="step-num">1</span><span>前往 Peanutbebe 官網</span></div>
+        <div class="step"><span class="step-num">2</span><span>使用 LINE 登入並綁定查詢</span></div>
+      </div>
+
+      <a class="button" href="https://sun.linepeanutbebe.here.now/" target="_blank" rel="noopener noreferrer">
+        前往官網
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <p class="note">登入會員後，請至會員中心完成綁定與訂單查詢。</p>
+    </section>
+    <footer>Peanutbebe · 把喜歡的日常，慢慢分享給你</footer>
+  </main>
+</body>
+</html>
